@@ -266,14 +266,22 @@ public sealed class FeedService
         };
     }
 
-    private static bool NeedsArticleContentFetch(string link, string summary, bool hasFullContent) =>
-        !hasFullContent && HtmlRenderer.ToPlainText(summary).Length < 900 &&
-        Uri.TryCreate(link, UriKind.Absolute, out var uri) &&
-        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    private static bool NeedsArticleContentFetch(string link, string summary, bool hasFullContent)
+    {
+        if (hasFullContent || !Uri.TryCreate(link, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        {
+            return false;
+        }
+
+        // The Sole 24 Ore RSS entries are abstracts, including the longer ones.
+        return uri.Host.EndsWith("ilsole24ore.com", StringComparison.OrdinalIgnoreCase) ||
+            HtmlRenderer.ToPlainText(summary).Length < 900;
+    }
 
     private static string? ExtractArticleContent(string html, Uri baseUri, string title)
     {
-        var article = FindBestContentContainer(html);
+        var article = ExtractSole24OreArticleBody(html, baseUri) ?? FindBestContentContainer(html);
         if (string.IsNullOrWhiteSpace(article))
         {
             return null;
@@ -289,6 +297,70 @@ public sealed class FeedService
         }
 
         return MakeUrlsAbsolute(article, baseUri);
+    }
+
+    private static string? ExtractSole24OreArticleBody(string html, Uri source)
+    {
+        if (!source.Host.EndsWith("ilsole24ore.com", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(html, @"\""articleBody\""\s*:\s*\""(?<value>(?:\\.|[^\""\\])*)\""", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        try
+        {
+            var body = JsonSerializer.Deserialize<string>($"\"{match.Groups["value"].Value}\"")?.Trim();
+            if (string.IsNullOrWhiteSpace(body) || body.Length < 220)
+            {
+                return null;
+            }
+
+            var paragraphs = Regex.Split(body, @"(?:\r?\n\s*){2,}")
+                .Select(paragraph => paragraph.Trim())
+                .Where(paragraph => paragraph.Length > 0)
+                .Select(paragraph => $"<p>{System.Net.WebUtility.HtmlEncode(paragraph)}</p>");
+            var image = ExtractOpenGraphImage(html, source);
+            var imageMarkup = image is null
+                ? string.Empty
+                : $"<img src=\"{System.Net.WebUtility.HtmlEncode(image)}\" alt=\"\" />";
+            return imageMarkup + string.Concat(paragraphs);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ExtractOpenGraphImage(string html, Uri source)
+    {
+        foreach (Match match in Regex.Matches(html, @"<meta\b[^>]*>", RegexOptions.IgnoreCase))
+        {
+            var tag = match.Value;
+            if (!Regex.IsMatch(tag, "\\b(?:property|name)\\s*=\\s*(['\"])(?:og:image|twitter:image)\\1", RegexOptions.IgnoreCase))
+            {
+                continue;
+            }
+
+            var content = Regex.Match(tag, "\\bcontent\\s*=\\s*(['\"])(?<value>.*?)\\1", RegexOptions.IgnoreCase);
+            if (!content.Success)
+            {
+                continue;
+            }
+
+            var value = System.Net.WebUtility.HtmlDecode(content.Groups["value"].Value);
+            if (Uri.TryCreate(source, value, out var imageUri) &&
+                (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps))
+            {
+                return imageUri.AbsoluteUri;
+            }
+        }
+
+        return null;
     }
 
     private static string RemoveDuplicateTitle(string html, string title)

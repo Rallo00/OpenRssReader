@@ -16,6 +16,8 @@ public partial class SettingsWindow : Window
         _viewModel = viewModel;
         FeedlyTokenTextBox.Text = _viewModel.FeedlyAccessToken;
         ArticleRetentionDaysTextBox.Text = _viewModel.ArticleRetentionDays.ToString();
+        AutoRefreshIntervalTextBox.Text = _viewModel.AutoRefreshIntervalMinutes.ToString();
+        MarkAsReadDelayTextBox.Text = _viewModel.MarkAsReadDelaySeconds.ToString();
         ReadingFontFamilyComboBox.ItemsSource = new[] { "Arial", "Cambria", "Georgia", "Lucida Sans Unicode", "Verdana", "Segoe UI" };
         ReadingFontFamilyComboBox.SelectedItem = _viewModel.ReadingFontFamily;
         ReadingFontSizeTextBox.Text = _viewModel.ReadingFontSize.ToString();
@@ -71,12 +73,21 @@ public partial class SettingsWindow : Window
 
     private async void SaveGeneralPreferencesButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!int.TryParse(AutoRefreshIntervalTextBox.Text, out var autoRefreshInterval) ||
+            !int.TryParse(MarkAsReadDelayTextBox.Text, out var markAsReadDelay))
+        {
+            GeneralStatusText.Text = "Enter whole numbers for refresh and reading delay.";
+            return;
+        }
+
         try
         {
             await _viewModel.SetGeneralPreferencesAsync(
                 SelectedText(UnreadSortComboBox),
                 SelectedText(GroupByComboBox),
                 SelectedText(AppearanceComboBox),
+                autoRefreshInterval,
+                markAsReadDelay,
                 DisplaySourceFaviconsCheckBox.IsChecked == true,
                 ShowAllArticlesListCheckBox.IsChecked == true,
                 ShowSavedListCheckBox.IsChecked == true,

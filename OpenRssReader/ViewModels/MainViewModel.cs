@@ -17,6 +17,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly FeedService _feedService = new();
     private readonly StorageService _storageService = new();
     private readonly TextToSpeechService _textToSpeechService = new();
+    private readonly SemaphoreSlim _refreshSemaphore = new(1, 1);
     private readonly List<ArticleItem> _allArticles = [];
     private readonly List<FeedSubscription> _allFeeds = [];
     private readonly List<string> _folders = [];
@@ -44,13 +45,16 @@ public sealed class MainViewModel : ObservableObject
     private bool _isTextToSpeechActive;
     private bool _isTextToSpeechPaused;
     private int _textToSpeechVolume = 80;
+    private int _autoRefreshIntervalMinutes = 30;
+    private int _markAsReadDelaySeconds = 3;
+    private CancellationTokenSource? _readDelayCancellation;
 
     public MainViewModel()
     {
         FeedGroups = [];
         VisibleArticles = [];
         ApplyGrouping();
-        RefreshAllCommand = new RelayCommand(async () => await RefreshAllAsync());
+        RefreshAllCommand = new RelayCommand(async () => await RefreshFeedsAsync());
         SelectAllCommand = new RelayCommand(() =>
         {
             _showUnreadOnly = false;
@@ -134,12 +138,8 @@ public sealed class MainViewModel : ObservableObject
                 return;
             }
 
-            if (_selectedArticle is not null && _selectedArticle.IsUnread)
-            {
-                _selectedArticle.IsUnread = false;
-                RecalculateUnreadCounts();
-                _ = PersistAsync();
-            }
+            CancelReadDelay();
+            ScheduleMarkAsRead(_selectedArticle);
 
             OnPropertyChanged(nameof(HasSelectedArticle));
             OnPropertyChanged(nameof(SelectedArticleHtml));
@@ -195,6 +195,8 @@ public sealed class MainViewModel : ObservableObject
     public string UnreadSortOrder => _unreadSortOrder;
     public string GroupBy => _groupBy;
     public string Appearance => _appearance;
+    public int AutoRefreshIntervalMinutes => _autoRefreshIntervalMinutes;
+    public int MarkAsReadDelaySeconds => _markAsReadDelaySeconds;
     public bool IsTextToSpeechActive => _isTextToSpeechActive;
     public string TextToSpeechButtonPath => _isTextToSpeechActive && !_isTextToSpeechPaused
         ? "M7 5h4v14H7z M13 5h4v14h-4z"
@@ -229,6 +231,7 @@ public sealed class MainViewModel : ObservableObject
 
     public async ValueTask DisposeAsync()
     {
+        CancelReadDelay();
         _textToSpeechService.Dispose();
         await PersistAsync();
     }
@@ -237,6 +240,8 @@ public sealed class MainViewModel : ObservableObject
     {
         _feedlyAccessToken = state.FeedlyAccessToken;
         _articleRetentionDays = Math.Clamp(state.ArticleRetentionDays <= 0 ? 30 : state.ArticleRetentionDays, 1, 3650);
+        _autoRefreshIntervalMinutes = Math.Clamp(state.AutoRefreshIntervalMinutes <= 0 ? 30 : state.AutoRefreshIntervalMinutes, 1, 1440);
+        _markAsReadDelaySeconds = Math.Clamp(state.MarkAsReadDelaySeconds <= 0 ? 3 : state.MarkAsReadDelaySeconds, 1, 3600);
         _readingFontFamily = string.IsNullOrWhiteSpace(state.ReadingFontFamily) ? "Segoe UI" : state.ReadingFontFamily;
         _readingFontSize = Math.Clamp(state.ReadingFontSize <= 0 ? 18 : state.ReadingFontSize, 12, 32);
         _readingTitleFontSize = Math.Clamp(state.ReadingTitleFontSize <= 0 ? 40 : state.ReadingTitleFontSize, 24, 64);
@@ -307,6 +312,23 @@ public sealed class MainViewModel : ObservableObject
         RecalculateUnreadCounts();
         OnPropertyChanged(nameof(LastRefreshLabel));
         _ = PersistAsync();
+    }
+
+    public async Task RefreshFeedsAsync()
+    {
+        if (!await _refreshSemaphore.WaitAsync(0))
+        {
+            return;
+        }
+
+        try
+        {
+            await RefreshAllAsync();
+        }
+        finally
+        {
+            _refreshSemaphore.Release();
+        }
     }
 
     private async Task RefreshAllAsync()
@@ -536,11 +558,25 @@ public sealed class MainViewModel : ObservableObject
         Math.Clamp(_readingFontSize + amount, 12, 32),
         Math.Clamp(_readingTitleFontSize + amount, 24, 64));
 
-    public async Task SetGeneralPreferencesAsync(string unreadSortOrder, string groupBy, string appearance, bool displaySourceFavicons, bool showAllArticlesList, bool showSavedList, bool showUnreadList)
+    public async Task SetGeneralPreferencesAsync(string unreadSortOrder, string groupBy, string appearance, int autoRefreshIntervalMinutes, int markAsReadDelaySeconds, bool displaySourceFavicons, bool showAllArticlesList, bool showSavedList, bool showUnreadList)
     {
+        if (autoRefreshIntervalMinutes is < 1 or > 1440)
+        {
+            throw new InvalidOperationException("Enter a refresh interval between 1 and 1440 minutes.");
+        }
+
+        if (markAsReadDelaySeconds is < 1 or > 3600)
+        {
+            throw new InvalidOperationException("Enter a reading delay between 1 and 3600 seconds.");
+        }
+
         _unreadSortOrder = unreadSortOrder == "Oldest first" ? "Oldest first" : "Newest first";
         _groupBy = groupBy == "Source" ? "Source" : "Date";
         _appearance = appearance is "Dark" or "System" ? appearance : "Light";
+        _autoRefreshIntervalMinutes = autoRefreshIntervalMinutes;
+        _markAsReadDelaySeconds = markAsReadDelaySeconds;
+        CancelReadDelay();
+        ScheduleMarkAsRead(SelectedArticle);
         _displaySourceFavicons = displaySourceFavicons;
         _showAllArticlesList = showAllArticlesList;
         _showSavedList = showSavedList;
@@ -552,6 +588,8 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowSavedList));
         OnPropertyChanged(nameof(ShowUnreadList));
         OnPropertyChanged(nameof(Appearance));
+        OnPropertyChanged(nameof(AutoRefreshIntervalMinutes));
+        OnPropertyChanged(nameof(MarkAsReadDelaySeconds));
         OnPropertyChanged(nameof(SelectedArticleHtml));
         await PersistAsync();
     }
@@ -802,6 +840,43 @@ public sealed class MainViewModel : ObservableObject
         _ = PersistAsync();
     }
 
+    private void ScheduleMarkAsRead(ArticleItem? article)
+    {
+        if (article is null || !article.IsUnread)
+        {
+            return;
+        }
+
+        _readDelayCancellation = new CancellationTokenSource();
+        _ = MarkAsReadAfterDelayAsync(article, _readDelayCancellation.Token);
+    }
+
+    private async Task MarkAsReadAfterDelayAsync(ArticleItem article, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(_markAsReadDelaySeconds), cancellationToken);
+            if (cancellationToken.IsCancellationRequested || !ReferenceEquals(SelectedArticle, article) || !article.IsUnread)
+            {
+                return;
+            }
+
+            article.IsUnread = false;
+            RecalculateUnreadCounts();
+            await PersistAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void CancelReadDelay()
+    {
+        _readDelayCancellation?.Cancel();
+        _readDelayCancellation?.Dispose();
+        _readDelayCancellation = null;
+    }
+
     private void OpenSelectedInBrowser()
     {
         if (SelectedArticle is null)
@@ -869,6 +944,8 @@ public sealed class MainViewModel : ObservableObject
             LastRefreshAt = _lastRefreshAt,
             FeedlyAccessToken = includeFeedlyToken ? _feedlyAccessToken : string.Empty,
             ArticleRetentionDays = _articleRetentionDays,
+            AutoRefreshIntervalMinutes = _autoRefreshIntervalMinutes,
+            MarkAsReadDelaySeconds = _markAsReadDelaySeconds,
             ReadingFontFamily = _readingFontFamily,
             ReadingFontSize = _readingFontSize,
             ReadingTitleFontSize = _readingTitleFontSize,

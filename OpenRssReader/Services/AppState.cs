@@ -5,6 +5,8 @@ public sealed class AppState
     public DateTimeOffset? LastRefreshAt { get; set; }
     public string FeedlyAccessToken { get; set; } = string.Empty;
     public int ArticleRetentionDays { get; set; } = 30;
+    public int AutoRefreshIntervalMinutes { get; set; } = 30;
+    public int MarkAsReadDelaySeconds { get; set; } = 3;
     public string ReadingFontFamily { get; set; } = "Segoe UI";
     public int ReadingFontSize { get; set; } = 18;
     public int ReadingTitleFontSize { get; set; } = 40;

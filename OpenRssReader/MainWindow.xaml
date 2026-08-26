@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:models="clr-namespace:OpenRssReader.Models"
         mc:Ignorable="d"
-        Title="Open RSS Reader v1.0"
+        Title="Open RSS Reader v1.1"
         Width="1680"
         Height="980"
         MinWidth="1320"

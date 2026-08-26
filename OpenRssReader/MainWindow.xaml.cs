@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using OpenRssReader.Models;
 using OpenRssReader.ViewModels;
 
@@ -11,6 +12,7 @@ namespace OpenRssReader;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
+    private readonly DispatcherTimer _automaticRefreshTimer = new();
 
     public MainWindow()
     {
@@ -18,15 +20,19 @@ public partial class MainWindow : Window
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
         _viewModel.PropertyChanged += ViewModelOnPropertyChanged;
+        _automaticRefreshTimer.Tick += AutomaticRefreshTimer_Tick;
         Loaded += async (_, _) =>
         {
             await _viewModel.InitializeAsync();
             ApplyAppearance();
             ArticleBrowser.NavigateToString(_viewModel.SelectedArticleHtml);
             ResizeArticleBrowser();
+            ConfigureAutomaticRefreshTimer();
         };
         Closed += async (_, _) =>
         {
+            _automaticRefreshTimer.Stop();
+            _automaticRefreshTimer.Tick -= AutomaticRefreshTimer_Tick;
             _viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
             await _viewModel.DisposeAsync();
         };
@@ -41,6 +47,33 @@ public partial class MainWindow : Window
         else if (e.PropertyName == nameof(MainViewModel.Appearance))
         {
             ApplyAppearance();
+        }
+        else if (e.PropertyName == nameof(MainViewModel.AutoRefreshIntervalMinutes))
+        {
+            ConfigureAutomaticRefreshTimer();
+        }
+    }
+
+    private void ConfigureAutomaticRefreshTimer()
+    {
+        _automaticRefreshTimer.Stop();
+        _automaticRefreshTimer.Interval = TimeSpan.FromMinutes(_viewModel.AutoRefreshIntervalMinutes);
+        _automaticRefreshTimer.Start();
+    }
+
+    private async void AutomaticRefreshTimer_Tick(object? sender, EventArgs e)
+    {
+        _automaticRefreshTimer.Stop();
+        try
+        {
+            await _viewModel.RefreshFeedsAsync();
+        }
+        finally
+        {
+            if (IsLoaded)
+            {
+                ConfigureAutomaticRefreshTimer();
+            }
         }
     }
 
