@@ -15,9 +15,9 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _viewModel = viewModel;
         FeedlyTokenTextBox.Text = _viewModel.FeedlyAccessToken;
-        ArticleRetentionDaysTextBox.Text = _viewModel.ArticleRetentionDays.ToString();
-        AutoRefreshIntervalTextBox.Text = _viewModel.AutoRefreshIntervalMinutes.ToString();
-        MarkAsReadDelayTextBox.Text = _viewModel.MarkAsReadDelaySeconds.ToString();
+        ArticleRetentionDaysInput.Value = _viewModel.ArticleRetentionDays;
+        AutoRefreshIntervalInput.Value = _viewModel.AutoRefreshIntervalMinutes;
+        MarkAsReadDelayInput.Value = _viewModel.MarkAsReadDelaySeconds;
         ReadingFontFamilyComboBox.ItemsSource = new[] { "Arial", "Cambria", "Georgia", "Lucida Sans Unicode", "Verdana", "Segoe UI" };
         ReadingFontFamilyComboBox.SelectedItem = _viewModel.ReadingFontFamily;
         ReadingFontSizeTextBox.Text = _viewModel.ReadingFontSize.ToString();
@@ -25,10 +25,10 @@ public partial class SettingsWindow : Window
         SelectComboBoxItem(UnreadSortComboBox, _viewModel.UnreadSortOrder);
         SelectComboBoxItem(GroupByComboBox, _viewModel.GroupBy);
         SelectComboBoxItem(AppearanceComboBox, _viewModel.Appearance);
-        DisplaySourceFaviconsCheckBox.IsChecked = _viewModel.DisplaySourceFavicons;
-        ShowAllArticlesListCheckBox.IsChecked = _viewModel.ShowAllArticlesList;
-        ShowSavedListCheckBox.IsChecked = _viewModel.ShowSavedList;
-        ShowUnreadListCheckBox.IsChecked = _viewModel.ShowUnreadList;
+        DisplaySourceFaviconsToggle.IsChecked = _viewModel.DisplaySourceFavicons;
+        ShowAllArticlesListToggle.IsChecked = _viewModel.ShowAllArticlesList;
+        ShowSavedListToggle.IsChecked = _viewModel.ShowSavedList;
+        ShowUnreadListToggle.IsChecked = _viewModel.ShowUnreadList;
         Loaded += (_, _) => ApplyActionButtonTheme();
     }
 
@@ -54,11 +54,7 @@ public partial class SettingsWindow : Window
 
     private async void SaveRetentionButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!int.TryParse(ArticleRetentionDaysTextBox.Text, out var days))
-        {
-            GeneralStatusText.Text = "Enter a whole number of days.";
-            return;
-        }
+        var days = (int)Math.Round(ArticleRetentionDaysInput.Value);
 
         try
         {
@@ -73,12 +69,8 @@ public partial class SettingsWindow : Window
 
     private async void SaveGeneralPreferencesButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!int.TryParse(AutoRefreshIntervalTextBox.Text, out var autoRefreshInterval) ||
-            !int.TryParse(MarkAsReadDelayTextBox.Text, out var markAsReadDelay))
-        {
-            GeneralStatusText.Text = "Enter whole numbers for refresh and reading delay.";
-            return;
-        }
+        var autoRefreshInterval = (int)Math.Round(AutoRefreshIntervalInput.Value);
+        var markAsReadDelay = (int)Math.Round(MarkAsReadDelayInput.Value);
 
         try
         {
@@ -88,10 +80,10 @@ public partial class SettingsWindow : Window
                 SelectedText(AppearanceComboBox),
                 autoRefreshInterval,
                 markAsReadDelay,
-                DisplaySourceFaviconsCheckBox.IsChecked == true,
-                ShowAllArticlesListCheckBox.IsChecked == true,
-                ShowSavedListCheckBox.IsChecked == true,
-                ShowUnreadListCheckBox.IsChecked == true);
+                DisplaySourceFaviconsToggle.IsChecked == true,
+                ShowAllArticlesListToggle.IsChecked == true,
+                ShowSavedListToggle.IsChecked == true,
+                ShowUnreadListToggle.IsChecked == true);
             GeneralStatusText.Text = "Preferences saved.";
         }
         catch (Exception exception)

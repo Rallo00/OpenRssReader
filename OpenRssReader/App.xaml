@@ -4,6 +4,11 @@
              xmlns:local="clr-namespace:OpenRssReader"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         <SolidColorBrush x:Key="LightSidebarBrush" Color="#E3E1E1" />
         <SolidColorBrush x:Key="LightContentBrush" Color="#F7F6F4" />
         <SolidColorBrush x:Key="LightSelectionBrush" Color="#DEDDDB" />
@@ -52,5 +57,6 @@
         <Style TargetType="ComboBoxItem">
             <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}" />
         </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
