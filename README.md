@@ -16,6 +16,7 @@ This project has been built with the support of AI.
 * Customize various UI elements;
 * Search articles by title.
 * Read article feature (using Text-To-Speech from Microsoft installed SAPI voices)
+* On-demand translation of article in-view;
 
 
 <img width="1642" height="754" alt="image" src="https://github.com/user-attachments/assets/b170540c-f134-470e-9f03-e248197d4c7f" />
