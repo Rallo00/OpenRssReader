@@ -21,3 +21,4 @@ This project has been built with the support of AI.
 
 <img width="1643" height="937" alt="image" src="https://github.com/user-attachments/assets/c7f17b33-8334-4946-819d-0a9414fbb302" />
 <img width="1644" height="928" alt="image" src="https://github.com/user-attachments/assets/86ab963e-5827-4470-8588-d80c0d1ec076" />
+<img width="1638" height="925" alt="image" src="https://github.com/user-attachments/assets/0f0fe5a2-c2c7-44fd-88d1-b6935290a85b" />
