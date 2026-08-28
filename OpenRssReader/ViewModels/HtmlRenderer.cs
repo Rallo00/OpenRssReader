@@ -89,6 +89,12 @@ public static class HtmlRenderer
 """.Replace("__BODY__", body, StringComparison.Ordinal);
     }
 
+    public static string ExtractDocumentBody(string html)
+    {
+        var match = Regex.Match(html, "<body\\b[^>]*>(?<body>.*)</body>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return match.Success ? match.Groups["body"].Value : html;
+    }
+
     public static string ApplyReadingTypography(string html, string fontFamily, string titleFontFamily, int fontSize, bool isDark)
     {
         var safeFontFamily = fontFamily.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("'", "\\'", StringComparison.Ordinal);
