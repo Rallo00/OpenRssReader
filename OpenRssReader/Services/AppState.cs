@@ -8,8 +8,11 @@ public sealed class AppState
     public int AutoRefreshIntervalMinutes { get; set; } = 30;
     public int MarkAsReadDelaySeconds { get; set; } = 3;
     public string ReadingFontFamily { get; set; } = "Segoe UI";
+    public string ReadingTitleFontFamily { get; set; } = "Segoe UI";
     public int ReadingFontSize { get; set; } = 18;
     public int ReadingTitleFontSize { get; set; } = 40;
+    public string TextToSpeechVoiceId { get; set; } = string.Empty;
+    public string TranslationTargetLanguage { get; set; } = "English";
     public string UnreadSortOrder { get; set; } = "Newest first";
     public string GroupBy { get; set; } = "Date";
     public string Appearance { get; set; } = "Light";

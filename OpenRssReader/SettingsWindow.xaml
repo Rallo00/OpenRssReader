@@ -1,234 +1,194 @@
-<Window x:Class="OpenRssReader.SettingsWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:hc="clr-namespace:HandyControl.Controls;assembly=HandyControl"
-        Title="Settings" Width="760" Height="603" MinWidth="680" MinHeight="430" WindowStartupLocation="CenterOwner" Background="{DynamicResource ContentBackgroundBrush}">
-    <Window.Resources>
-        <Style x:Key="SettingsTabStyle" TargetType="ListBoxItem">
-            <Setter Property="Padding" Value="16,15" /><Setter Property="Margin" Value="0,0,0,8" /><Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" /><Setter Property="FontSize" Value="15" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="TabSurface" MinHeight="50" Background="Transparent" CornerRadius="14"><ContentPresenter VerticalAlignment="Center" /></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="TabSurface" Property="Background" Value="{DynamicResource SurfaceBackgroundBrush}" /></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TabSurface" Property="Background" Value="{DynamicResource SurfaceBackgroundBrush}" /></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
-        </Style>
-        <Style x:Key="RoundedComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Height" Value="42" />
-            <Setter Property="Padding" Value="14,0" />
-            <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14">
-                                <ToggleButton x:Name="DropDownToggle" Background="Transparent" Foreground="{TemplateBinding Foreground}" BorderThickness="0" Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <Grid>
-                                        <ContentPresenter Margin="14,0,38,0" VerticalAlignment="Center" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
-                                        <Path Data="M5 8l5 5 5-5" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0" />
-                                    </Grid>
-                                </ToggleButton>
-                            </Border>
-                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                                <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" CornerRadius="12" Padding="4" Margin="0,4,0,0" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Auto">
-                                        <ItemsPresenter />
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="SettingsNumericUpDownStyle" TargetType="hc:NumericUpDown">
-            <Setter Property="Height" Value="42" />
-            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
-            <Setter Property="Padding" Value="12,0" />
-        </Style>
-        <Style x:Key="SettingsToggleStyle" TargetType="hc:ToggleBlock">
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
-            <Setter Property="MinWidth" Value="58" />
-            <Setter Property="Height" Value="30" />
-        </Style>
-        <Style TargetType="ComboBox" BasedOn="{StaticResource RoundedComboBoxStyle}" />
-        <Style TargetType="TextBox">
-            <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}" />
-            <Setter Property="CaretBrush" Value="{DynamicResource InputTextBrush}" />
-        </Style>
-        <Style x:Key="SettingsActionButtonStyle" TargetType="Button">
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonSurface" Background="{TemplateBinding Background}" CornerRadius="14" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonSurface" Property="Background" Value="{DynamicResource SelectionBackgroundBrush}" /></Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="ItemSurface" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="ItemSurface" Property="Background" Value="{DynamicResource SelectionBackgroundBrush}" /></Trigger>
-                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="ItemSurface" Property="Background" Value="{DynamicResource SelectionBackgroundBrush}" /></Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
-    <Grid>
-        <Grid.ColumnDefinitions><ColumnDefinition Width="220" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-        <Border Grid.Column="0" Background="{DynamicResource SurfaceBackgroundBrush}" BorderBrush="{DynamicResource SurfaceBackgroundBrush}" BorderThickness="0,0,1,0">
-            <StackPanel Margin="22,24">
-                <TextBlock Text="Settings" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,22" />
-                <ListBox x:Name="SettingsTabs" SelectedIndex="0" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource SettingsTabStyle}">
-                    <ListBoxItem Margin="0,0,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0,0,10,0">
-                                <Path Data="M10 5H3 M12 19H3 M14 3v4 M16 17v4 M21 12h-9 M21 19h-5 M21 5h-7 M8 10v4 M8 12H3" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-                            </Viewbox>
-                            <TextBlock Text="General" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Margin="0,-10,0,0"><StackPanel Orientation="Horizontal"><Viewbox Width="20" Height="20" Margin="0,0,10,0"><Path Data="M12 5v16 M16 13h2 M16 9h2 M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z M6 13h2 M6 9h2" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox><TextBlock Text="Reading" VerticalAlignment="Center" /></StackPanel></ListBoxItem>
-                    <ListBoxItem Margin="0,-10,0,0"><StackPanel Orientation="Horizontal"><Viewbox Width="20" Height="20" Margin="0,0,10,0"><Path Data="M19 11v6 M19 13h2 M2 21a8 8 0 0 1 12.868-6.349 M5 8a5 5 0 1 0 10 0a5 5 0 1 0-10 0 M17 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox><TextBlock Text="Feedly account" VerticalAlignment="Center" /></StackPanel></ListBoxItem>
-                    <ListBoxItem Margin="0,-10,0,0"><StackPanel Orientation="Horizontal"><Viewbox Width="20" Height="20" Margin="0,0,10,0"><Path Data="M3 5a9 3 0 1 0 18 0a9 3 0 1 0-18 0 M3 12a9 3 0 0 0 5 2.69 M21 9.3V5 M3 5v14a9 3 0 0 0 6.47 2.88 M12 12v4h4 M13 20a5 5 0 0 0 9-3 4.5 4.5 0 0 0-4.5-4.5c-1.33 0-2.54 0.54-3.41 1.41L12 16" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox><TextBlock Text="Backup &amp; Restore" VerticalAlignment="Center" /></StackPanel></ListBoxItem>
-                </ListBox>
-            </StackPanel>
-        </Border>
-        <hc:ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="34,30,18,30">
-            <Grid>
-                <Grid.Style><Style TargetType="Grid"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding SelectedIndex, ElementName=SettingsTabs}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Grid.Style>
-                <StackPanel>
-                    <TextBlock Text="General" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                    <TextBlock Text="Open RSS Reader stores feeds and article state locally on this device." Margin="0,10,0,0" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" />
-                    <TextBlock Text="Keep downloaded articles for" Margin="0,24,0,8" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                <StackPanel Orientation="Horizontal">
-                    <hc:NumericUpDown x:Name="ArticleRetentionDaysInput" Style="{StaticResource SettingsNumericUpDownStyle}" Width="120" Minimum="1" Maximum="3650" Increment="1" DecimalPlaces="0" />
-                    <TextBlock Text="days. Saved articles are kept indefinitely." Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" />
-                    <Button Content="Save" Click="SaveRetentionButton_Click" Margin="16,0,0,0" Padding="16,8" Background="{DynamicResource SurfaceBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}" BorderBrush="Transparent" />
-                </StackPanel>
-                <Grid Margin="0,20,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/><ColumnDefinition Width="18"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Check for new feeds every" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8" />
-                        <StackPanel Orientation="Horizontal">
-                            <hc:NumericUpDown x:Name="AutoRefreshIntervalInput" Style="{StaticResource SettingsNumericUpDownStyle}" Width="120" Minimum="1" Maximum="1440" Increment="1" DecimalPlaces="0" />
-                            <TextBlock Text="minutes" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" />
-                        </StackPanel>
+﻿<Window x:Class="OpenRssReader.SettingsWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="" Width="680" Height="536" MinWidth="680" MinHeight="430" WindowStartupLocation="CenterOwner">
+    <Grid Margin="5">
+        <TextBlock Text="Settings" FontSize="30" FontWeight="Bold" Foreground="#444443" Margin="5,5,0,0" />
+        <TabControl Margin="5,60,5,42">
+            <!-- TAB GENERAL -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Width="16" Height="16" Margin="0,0,6,0">
+                            <Path Data="M10 5H3 M12 19H3 M14 3v4 M16 17v4 M21 12h-9 M21 19h-5 M21 5h-7 M8 10v4 M8 12H3" Stroke="#444443" StrokeThickness="1.8" />
+                        </Viewbox>
+                        <TextBlock Text="General" />
                     </StackPanel>
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Mark the articles as read after" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8" />
-                        <StackPanel Orientation="Horizontal">
-                            <hc:NumericUpDown x:Name="MarkAsReadDelayInput" Style="{StaticResource SettingsNumericUpDownStyle}" Width="120" Minimum="1" Maximum="3600" Increment="1" DecimalPlaces="0" />
-                            <TextBlock Text="seconds" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" />
+                </TabItem.Header>
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Open RSS Reader stores feeds and article state locally on this device." FontWeight="Bold" FontSize="14" />
+                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Keep synchronized feed articles for" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox x:Name="ArticleRetentionDaysInput" Margin="0,5,0,0" Width="150" />
+                                    <TextBlock Text="days." Margin="10,10,0,0" />
+                                </StackPanel>
+                                <TextBlock Text="Check for new feeds every" Margin="0,10,0,0" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox x:Name="AutoRefreshIntervalInput" Margin="0,5,0,0" Width="150" />
+                                    <TextBlock Text="minutes." Margin="10,10,0,0" />
+                                </StackPanel>
+                                <TextBlock Text="Mark the articles as read after" Margin="0,10,0,0" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox x:Name="MarkAsReadDelayInput" Margin="0,5,0,0" Width="150" />
+                                    <TextBlock Text="seconds." Margin="10,10,0,0" />
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Margin="50,0,0,0">
+                                <TextBlock Text="Sort unread items" />
+                                <ComboBox x:Name="UnreadSortComboBox" Width="150" Margin="0,5,0,0" Height="28">
+                                    <ComboBoxItem Content="Newest first" />
+                                    <ComboBoxItem Content="Oldest first" />
+                                </ComboBox>
+                                <TextBlock Text="Group by" Margin="0,10,0,0" />
+                                <ComboBox x:Name="GroupByComboBox" Width="150" Margin="0,5,0,0" Height="28">
+                                    <ComboBoxItem Content="Date" />
+                                    <ComboBoxItem Content="Source" />
+                                </ComboBox>
+                                <TextBlock Text="Theme" Margin="0,10,0,0" />
+                                <ComboBox x:Name="ThemeComboBox" Width="150" Margin="0,5,0,0" Height="28">
+                                    <ComboBoxItem Content="Light" />
+                                    <ComboBoxItem Content="Dark" />
+                                </ComboBox>
+                            </StackPanel>
                         </StackPanel>
+                        <StackPanel Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <ToggleButton x:Name="DisplaySourceFaviconsCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                <TextBlock Text="Display source favicons" Margin="10,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <ToggleButton x:Name="ShowAllArticlesListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                <TextBlock Text="Show all articles list" Margin="10,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <ToggleButton x:Name="ShowUnreadListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                <TextBlock Text="Show unread list" Margin="10,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <ToggleButton x:Name="ShowSavedListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                <TextBlock Text="Show saved list" Margin="10,3,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock x:Name="GeneralStatusText" Margin="0,10,0,0" Foreground="Firebrick" />
                     </StackPanel>
                 </Grid>
-                <Grid Margin="0,24,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/><ColumnDefinition Width="18"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Sort unread items" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8"/>
-                        <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42">
-                            <hc:ComboBox x:Name="UnreadSortComboBox" Background="Transparent" BorderThickness="0">
-                                <ComboBoxItem Content="Newest first"/>
-                                <ComboBoxItem Content="Oldest first"/>
-                            </hc:ComboBox>
-                        </Border>
-                    </StackPanel><StackPanel Grid.Column="2"><TextBlock Text="Group by" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8"/><Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42"><hc:ComboBox x:Name="GroupByComboBox" Background="Transparent" BorderThickness="0" Padding="12,6"><ComboBoxItem Content="Date"/><ComboBoxItem Content="Source"/></hc:ComboBox></Border></StackPanel></Grid><TextBlock Text="Appearance" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,18,0,8"/><Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42"><hc:ComboBox x:Name="AppearanceComboBox" Background="Transparent" BorderThickness="0" Padding="12,6"><ComboBoxItem Content="Light"/><ComboBoxItem Content="Dark"/><ComboBoxItem Content="System"/></hc:ComboBox></Border><StackPanel Margin="0,18,0,0"><DockPanel Margin="0,0,0,10"><hc:ToggleBlock x:Name="DisplaySourceFaviconsToggle" Style="{StaticResource SettingsToggleStyle}" DockPanel.Dock="Right" CheckedContent="On" UnCheckedContent="Off"/><TextBlock Text="Display source favicons" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/></DockPanel><DockPanel Margin="0,0,0,10"><hc:ToggleBlock x:Name="ShowAllArticlesListToggle" Style="{StaticResource SettingsToggleStyle}" DockPanel.Dock="Right" CheckedContent="On" UnCheckedContent="Off"/><TextBlock Text="Show all articles list" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/></DockPanel><DockPanel Margin="0,0,0,10"><hc:ToggleBlock x:Name="ShowSavedListToggle" Style="{StaticResource SettingsToggleStyle}" DockPanel.Dock="Right" CheckedContent="On" UnCheckedContent="Off"/><TextBlock Text="Show Saved list" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/></DockPanel><DockPanel><hc:ToggleBlock x:Name="ShowUnreadListToggle" Style="{StaticResource SettingsToggleStyle}" DockPanel.Dock="Right" CheckedContent="On" UnCheckedContent="Off"/><TextBlock Text="Show Unread list" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/></DockPanel><Button Content="Save preferences" Click="SaveGeneralPreferencesButton_Click" HorizontalAlignment="Right" Margin="0,16,0,0" Padding="16,8" Background="{DynamicResource SurfaceBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}" BorderBrush="Transparent"/></StackPanel><TextBlock x:Name="GeneralStatusText" Margin="0,10,0,0" Foreground="{DynamicResource ErrorTextBrush}" /></StackPanel>
-            </Grid>
-            <Grid>
-                <Grid.Style><Style TargetType="Grid"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding SelectedIndex, ElementName=SettingsTabs}" Value="1"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Grid.Style>
-                <StackPanel>
-                    <TextBlock Text="Reading" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                    <TextBlock Text="Choose the typography used in the article reading panel." Margin="0,10,0,24" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition Width="130" />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition Width="130" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Font" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8" />
-                            <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42"><hc:ComboBox x:Name="ReadingFontFamilyComboBox" SelectionChanged="ReadingTypographyChanged" Background="Transparent" BorderThickness="0" Padding="12,6" /></Border>
+            </TabItem>
+            <!-- TAB READING -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Width="16" Height="16" Margin="0,0,6,0">
+                            <Path Data="M12 5v16 M16 13h2 M16 9h2 M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z M6 13h2 M6 9h2" Stroke="#444443" StrokeThickness="1.8" />
+                        </Viewbox>
+                        <TextBlock Text="Reading" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="10">
+                    <TextBlock Text="Choose the typography used in the article reading panel." FontWeight="Bold" FontSize="14" />
+                    <StackPanel Orientation="Vertical" Margin="0,40,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel>
+                                <TextBlock Text="Article font" />
+                                <ComboBox x:Name="ReadingFontFamilyComboBox" Height="28" Width="150" HorizontalAlignment="Left" Margin="0,5,0,0" SelectionChanged="ReadingTypographyChanged" />
+                                <TextBlock Text="Article font size" Margin="0,10,0,0" />
+                                <TextBox x:Name="ReadingFontSizeTextBox" Margin="0,5,0,0" Width="150" HorizontalAlignment="Left" TextChanged="ReadingTypographyChanged" />
+                            </StackPanel>
+                            <StackPanel Margin="50,0,0,0">
+                                <TextBlock Text="Title font" />
+                                <ComboBox x:Name="ReadingTitleFontFamilyComboBox"
+                                          Height="28"
+                                          Width="150"
+                                          Margin="0,5,0,0"
+                                          SelectionChanged="ReadingTypographyChanged" />
+                                <TextBlock Text="Title font size" Margin="0,10,0,0" />
+                                <TextBox x:Name="ReadingTitleFontSizeTextBox" Margin="0,5,0,0" Width="150" HorizontalAlignment="Left" TextChanged="ReadingTypographyChanged" />
+                            </StackPanel>
+                            <StackPanel Margin="50,0,0,0">
+                                <TextBlock Text="Default translation language" />
+                                <ComboBox x:Name="TranslateLanguageComboBox"
+                                          Height="28"
+                                          Width="150"
+                                          HorizontalAlignment="Left"
+                                          Margin="0,5,0,0"
+                                          SelectionChanged="TranslationLanguageChanged" />
+                                <TextBlock Text="This is a beta functionality!" Margin="0,5,0,0" FontStyle="Italic" Foreground="#888" />
+                            </StackPanel>
                         </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Article size" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8" />
-                            <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42"><hc:TextBox x:Name="ReadingFontSizeTextBox" TextChanged="ReadingTypographyChanged" Padding="16,10" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" /></Border>
+                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Microsoft SAPI voice for article reading" />
+                                <ComboBox x:Name="TextToSpeechVoiceComboBox"
+                                          Height="28"
+                                          Width="280"
+                                          HorizontalAlignment="Left"
+                                          Margin="0,5,0,0"
+                                          Style="{x:Null}"
+                                          DisplayMemberPath="DisplayName"
+                                          SelectedValuePath="Id"
+                                          MaxDropDownHeight="240"
+                                          PreviewMouseLeftButtonUp="TextToSpeechVoiceComboBox_PreviewMouseLeftButtonUp"
+                                          SelectionChanged="TextToSpeechVoiceChanged" />
+                            </StackPanel>
                         </StackPanel>
-                        <StackPanel Grid.Column="4">
-                            <TextBlock Text="Title size" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8" />
-                            <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42"><hc:TextBox x:Name="ReadingTitleFontSizeTextBox" TextChanged="ReadingTypographyChanged" Padding="16,10" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" /></Border>
+                    </StackPanel>
+                    <TextBlock x:Name="ReadingStatusText" Margin="0,170,0,0" />
+                </Grid>
+            </TabItem>
+            <!-- TAB INTEGRATIONS -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Width="16" Height="16" Margin="0,0,6,0">
+                            <Path Data="M19 11v6 M19 13h2 M2 21a8 8 0 0 1 12.868-6.349 M5 8a5 5 0 1 0 10 0a5 5 0 1 0-10 0 M17 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0" Stroke="#444443" StrokeThickness="1.8" />
+                        </Viewbox>
+                        <TextBlock Text="Integrations (beta)" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="10">
+                    <TextBlock Text="Set up your integrations (beta)" FontWeight="Bold" FontSize="14" />
+                    <StackPanel Margin="0,40,0,0">
+                        <TextBlock Text="Feedly" FontWeight="Bold" />
+                        <TextBlock Text="Feedly requires an enterprise account with an&#xA;API key access token" Margin="0,5,0,0" FontStyle="Italic" Foreground="#888" />
+                        <TextBox x:Name="FeedlyTokenTextBox" Margin="0,5,0,0" Width="250" HorizontalAlignment="Left" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="Connect token" Click="ConnectFeedlyButton_Click" />
+                            <Button Content="Sync feeds" Click="SyncFeedlyButton_Click" Margin="10,0,0,0" />
                         </StackPanel>
-                    </Grid>
-                    <TextBlock x:Name="ReadingStatusText" Margin="0,12,0,0" Foreground="{DynamicResource SecondaryTextBrush}" />
-                </StackPanel>
-            </Grid>
-            <Grid>
-                <Grid.Style><Style TargetType="Grid"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding SelectedIndex, ElementName=SettingsTabs}" Value="2"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Grid.Style>
-                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                <StackPanel><TextBlock Text="Feedly account" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" /><TextBlock Text="Feedly sign-in uses OAuth in your browser. Open RSS Reader never asks for or stores your Feedly password." Margin="0,10,0,0" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" /></StackPanel>
-                <Border Grid.Row="1" Background="{DynamicResource SurfaceBackgroundBrush}" CornerRadius="16" Padding="18" Margin="0,24,0,0"><StackPanel><TextBlock Text="OAuth client required" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" /><TextBlock Text="A Feedly OAuth client registered for Open RSS Reader is required before browser sign-in can be enabled. Reeder's client ID cannot be reused." Margin="0,6,0,0" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" /></StackPanel></Border>
-                <StackPanel Grid.Row="2" Margin="0,20,0,0"><TextBlock Text="Enterprise API access token" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" /><TextBlock Text="For Feedly Enterprise accounts with API access only." Margin="0,4,0,10" Foreground="{DynamicResource SecondaryTextBrush}" /><Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42"><TextBox x:Name="FeedlyTokenTextBox" Padding="16,10" BorderThickness="0" Background="Transparent" Foreground="{DynamicResource InputTextBrush}" VerticalContentAlignment="Center" /></Border><StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0"><Button Content="Connect token" Click="ConnectFeedlyButton_Click" Padding="16,8" Margin="0,0,10,0" Background="{DynamicResource FeedlyActionBrush}" Foreground="{DynamicResource WhiteBrush}" BorderThickness="0" /><Button Content="Sync feeds" Click="SyncFeedlyButton_Click" Padding="16,8" /></StackPanel><TextBlock x:Name="StatusText" Margin="0,14,0,0" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" /></StackPanel>
-            </Grid>
-            <Grid>
-                <Grid.Style><Style TargetType="Grid"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding SelectedIndex, ElementName=SettingsTabs}" Value="3"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Grid.Style>
-                <StackPanel>
-                    <TextBlock Text="Backup &amp; Restore" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                    <TextBlock Text="Save your preferences, folders, and RSS subscriptions to a JSON file. Articles are not included and will be downloaded again after restore." Margin="0,10,0,24" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" />
-                    <Border Background="Transparent" CornerRadius="16" Padding="18">
-                        <StackPanel>
-                            <TextBlock Text="Create backup" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                            <TextBlock Text="Choose where to save a portable JSON backup of the app configuration and feeds." Margin="0,6,0,14" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" />
-                            <Button Content="Create backup" Click="CreateBackupButton_Click" HorizontalAlignment="Left" />
-                        </StackPanel>
-                    </Border>
-                    <Border Background="Transparent" CornerRadius="16" Padding="18" Margin="0,16,0,0">
-                        <StackPanel>
-                            <TextBlock Text="Restore backup" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                            <TextBlock Text="Choose a backup JSON to restore preferences, folders, and feeds. Current articles will be replaced." Margin="0,6,0,14" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" />
-                            <Button Content="Restore backup" Click="RestoreBackupButton_Click" HorizontalAlignment="Left" />
-                        </StackPanel>
-                    </Border>
-                    <Border Background="Transparent" CornerRadius="16" Padding="18" Margin="0,16,0,0">
-                        <StackPanel>
-                            <TextBlock Text="Initialize settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                            <TextBlock Text="Delete all locally stored feeds, folders, articles, and preferences, then return the app to its factory settings." Margin="0,6,0,14" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" />
-                            <Button Content="Reset all data" Click="ResetSettingsButton_Click" HorizontalAlignment="Left" />
-                        </StackPanel>
-                    </Border>
-                    <TextBlock x:Name="BackupStatusText" Margin="0,14,0,0" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" />
-                </StackPanel>
-            </Grid>
-        </Grid>
-        </hc:ScrollViewer>
+                        <TextBlock x:Name="StatusText" Margin="0,10,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <!-- TAB BACKUP RESTORE -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Width="16" Height="16" Margin="0,0,6,0">
+                            <Path Data="M3 5a9 3 0 1 0 18 0a9 3 0 1 0-18 0 M3 12a9 3 0 0 0 5 2.69 M21 9.3V5 M3 5v14a9 3 0 0 0 6.47 2.88 M12 12v4h4 M13 20a5 5 0 0 0 9-3 4.5 4.5 0 0 0-4.5-4.5c-1.33 0-2.54 0.54-3.41 1.41L12 16" Stroke="#444443" StrokeThickness="1.8" />
+                        </Viewbox>
+                        <TextBlock Text="Backup / Restore" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="10">
+                    <TextBlock Text="Save and restore your preferences, feeds list. Please note that articles are not included." FontWeight="Bold" FontSize="14" />
+                    <StackPanel Margin="0,40,0,0">
+                        <TextBlock Text="Create backup" FontWeight="Bold" />
+                        <TextBlock Text="Choose where to save a portable JSON backup of the app configuration and feeds." Margin="0,5,0,0" />
+                        <Button Content="Create backup" Click="CreateBackupButton_Click" Margin="0,5,0,0" HorizontalAlignment="Center" />
+                        <TextBlock Text="Restore backup" FontWeight="Bold" Margin="0,20,0,0" />
+                        <TextBlock Text="Choose a backup JSON to restore preferences, folders, and feeds list. Current articles will be replaced." Margin="0,5,0,0" />
+                        <Button Content="Restore backup" Click="RestoreBackupButton_Click" Margin="0,5,0,0" HorizontalAlignment="Center" />
+                        <TextBlock Text="Initialize all data" FontWeight="Bold" Margin="0,20,0,0" />
+                        <TextBlock Text="Delete all folders, feeds list and preferences, then return the app to its default settings." Margin="0,5,0,0" />
+                        <Button Content="Initialize all data" Click="ResetSettingsButton_Click" Margin="0,5,0,0" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="BackupStatusText" Margin="0,10,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <Button Content="Save preferences" Click="SaveGeneralPreferencesButton_Click" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,5,5" />
     </Grid>
 </Window>

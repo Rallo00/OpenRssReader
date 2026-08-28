@@ -89,14 +89,15 @@ public static class HtmlRenderer
 """.Replace("__BODY__", body, StringComparison.Ordinal);
     }
 
-    public static string ApplyReadingTypography(string html, string fontFamily, int fontSize, bool isDark)
+    public static string ApplyReadingTypography(string html, string fontFamily, string titleFontFamily, int fontSize, bool isDark)
     {
         var safeFontFamily = fontFamily.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("'", "\\'", StringComparison.Ordinal);
+        var safeTitleFontFamily = titleFontFamily.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("'", "\\'", StringComparison.Ordinal);
         var background = isDark ? "#292929" : "#F7F6F4";
         var articleText = isDark ? "#BDBDBD" : "#403B36";
         var title = isDark ? "#FFFFFF" : "#403B36";
         var muted = isDark ? "#BDBDBD" : "#7E766E";
-        var typography = $"<style>html, body {{ background-color: {background} !important; color: {articleText} !important; }} body {{ font-family: '{safeFontFamily}', Segoe UI, Arial, sans-serif !important; font-size: {fontSize}px !important; }} p, li, blockquote, a {{ color: {articleText} !important; }} h1, h2, h3 {{ color: {title} !important; }} blockquote {{ border-color: {muted} !important; }}</style>";
+        var typography = $"<style>html, body {{ background-color: {background} !important; color: {articleText} !important; }} body {{ font-family: '{safeFontFamily}', Segoe UI, Arial, sans-serif !important; font-size: {fontSize}px !important; }} p, li, blockquote, a {{ color: {articleText} !important; }} h1, h2, h3 {{ color: {title} !important; font-family: '{safeTitleFontFamily}', Segoe UI, Arial, sans-serif !important; }} blockquote {{ border-color: {muted} !important; }}</style>";
         return html.Replace("</head>", $"{typography}</head>", StringComparison.OrdinalIgnoreCase);
     }
 
