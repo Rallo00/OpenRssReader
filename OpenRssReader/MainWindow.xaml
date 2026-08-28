@@ -6,7 +6,7 @@
         xmlns:models="clr-namespace:OpenRssReader.Models"
         xmlns:hc="clr-namespace:HandyControl.Controls;assembly=HandyControl"
         mc:Ignorable="d"
-        Title="Open RSS Reader v1.1"
+        Title="Open RSS Reader v1.2"
         Width="1680"
         Height="980"
         MinWidth="1320"
@@ -381,6 +381,10 @@
                         <Viewbox Width="22" Height="22" Margin="0,-5,0,0"><Path Data="M14 11 L18 7 L22 11 M18 16 V7 M2 16 L6.039 6.31 A0.5 0.5 0 0 1 6.962 6.31 L11 16 M3.304 13 H9.696" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                     </Button>
                     <Border Width="1" Height="25" Margin="10,0" VerticalAlignment="Center" Background="{DynamicResource SeparatorBrush}" />
+                    <Button Style="{StaticResource IconButtonStyle}" Command="{Binding TranslateSelectedArticleCommand}" ToolTip="{Binding TranslationToolTip}" Margin="0">
+                        <Viewbox Width="20" Height="20" Margin="0,-3,0,0"><Path Data="M5,8 L11,14 M4,14 L10,8 L12,5 M2,5 H14 M7,2 H8 M22,22 L17,12 L12,22 M14,18 H20" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
+                    </Button>
+                    <Border Width="1" Height="25" Margin="10,0" VerticalAlignment="Center" Background="{DynamicResource SeparatorBrush}" />
                     <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleTextToSpeechCommand}" ToolTip="{Binding TextToSpeechToolTip}">
                         <Viewbox Width="16" Height="16" Margin="-5,1,0,0"><Path Data="{Binding TextToSpeechButtonPath}" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" Margin="-5,-5,0,0"/></Viewbox>
                     </Button>
@@ -397,7 +401,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Margin="0,0,0,16">
                         <TextBlock Text="{Binding SelectedArticle.DisplayDateLabel}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding SelectedArticle.Title}" Margin="0,10,0,12" FontFamily="{Binding ReadingTitleFontFamily}" FontSize="{Binding ReadingTitleFontSize}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedArticleDisplayTitle}" Margin="0,10,0,12" FontFamily="{Binding ReadingTitleFontFamily}" FontSize="{Binding ReadingTitleFontSize}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding SelectedArticle.AuthorLine}" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" FontWeight="SemiBold" />
                     </StackPanel>
                 <WebBrowser x:Name="ArticleBrowser" Grid.Row="1"/>

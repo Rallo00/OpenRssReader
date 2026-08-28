@@ -17,6 +17,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly FeedService _feedService = new();
     private readonly StorageService _storageService = new();
     private readonly TextToSpeechService _textToSpeechService = new();
+    private readonly TranslationService _translationService = new();
     private readonly SemaphoreSlim _refreshSemaphore = new(1, 1);
     private readonly List<ArticleItem> _allArticles = [];
     private readonly List<FeedSubscription> _allFeeds = [];
@@ -37,6 +38,9 @@ public sealed class MainViewModel : ObservableObject
     private int _readingTitleFontSize = 40;
     private string _textToSpeechVoiceId = string.Empty;
     private string _translationTargetLanguage = "English";
+    private string? _translatedTitle;
+    private string? _translatedHtml;
+    private bool _isTranslating;
     private string? _selectedFeedId;
     private string _unreadSortOrder = "Newest first";
     private string _groupBy = "Date";
@@ -98,6 +102,7 @@ public sealed class MainViewModel : ObservableObject
         OpenInBrowserCommand = new RelayCommand(OpenSelectedInBrowser, () => SelectedArticle is not null);
         DecreaseReadingSizeCommand = new RelayCommand(() => _ = AdjustReadingTypographyAsync(-1));
         IncreaseReadingSizeCommand = new RelayCommand(() => _ = AdjustReadingTypographyAsync(1));
+        TranslateSelectedArticleCommand = new RelayCommand(async () => await TranslateSelectedArticleAsync(), () => SelectedArticle is not null && !_isTranslating);
         ToggleTextToSpeechCommand = new RelayCommand(ToggleTextToSpeech, () => SelectedArticle is not null);
         ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty);
     }
@@ -116,6 +121,7 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand OpenInBrowserCommand { get; }
     public RelayCommand DecreaseReadingSizeCommand { get; }
     public RelayCommand IncreaseReadingSizeCommand { get; }
+    public RelayCommand TranslateSelectedArticleCommand { get; }
     public RelayCommand ToggleTextToSpeechCommand { get; }
     public RelayCommand ClearSearchCommand { get; }
 
@@ -143,15 +149,20 @@ public sealed class MainViewModel : ObservableObject
 
             CancelReadDelay();
             ScheduleMarkAsRead(_selectedArticle);
+            _translatedTitle = null;
+            _translatedHtml = null;
 
             OnPropertyChanged(nameof(HasSelectedArticle));
             OnPropertyChanged(nameof(SelectedArticleHtml));
+            OnPropertyChanged(nameof(SelectedArticleDisplayTitle));
+            OnPropertyChanged(nameof(TranslationToolTip));
             ToggleSelectedFavoriteCommand.RaiseCanExecuteChanged();
             ToggleSelectedSavedCommand.RaiseCanExecuteChanged();
             ToggleSelectedReadCommand.RaiseCanExecuteChanged();
             _textToSpeechService.Stop();
             SetTextToSpeechState();
             ToggleTextToSpeechCommand.RaiseCanExecuteChanged();
+            TranslateSelectedArticleCommand.RaiseCanExecuteChanged();
             if (_selectedArticle is not null)
             {
                 _ = LoadArticleContentAsync(_selectedArticle);
@@ -162,11 +173,12 @@ public sealed class MainViewModel : ObservableObject
 
     public bool HasSelectedArticle => SelectedArticle is not null;
     public string SelectedArticleHtml => HtmlRenderer.ApplyReadingTypography(
-        SelectedArticle?.HtmlContent ?? HtmlRenderer.CreateDocument("Open RSS Reader", "<p>Select an article to start reading.</p>", string.Empty),
+        _translatedHtml ?? SelectedArticle?.HtmlContent ?? HtmlRenderer.CreateDocument("Open RSS Reader", "<p>Select an article to start reading.</p>", string.Empty),
         _readingFontFamily,
         _readingTitleFontFamily,
         _readingFontSize,
         _appearance == "Dark");
+    public string SelectedArticleDisplayTitle => _translatedTitle ?? SelectedArticle?.Title ?? string.Empty;
     public string LastRefreshLabel => _lastRefreshAt is null ? "Not refreshed yet" : $"Updated on {_lastRefreshAt.Value.ToLocalTime():dd MMM yyyy HH:mm}";
     public string ActiveSectionTitle
     {
@@ -195,6 +207,7 @@ public sealed class MainViewModel : ObservableObject
     public int ReadingTitleFontSize => _readingTitleFontSize;
     public string TextToSpeechVoiceId => _textToSpeechVoiceId;
     public string TranslationTargetLanguage => _translationTargetLanguage;
+    public string TranslationToolTip => _isTranslating ? "Translating article..." : $"Translate to {_translationTargetLanguage}";
     public bool DisplaySourceFavicons => _displaySourceFavicons;
     public bool ShowAllArticlesList => _showAllArticlesList;
     public bool ShowSavedList => _showSavedList;
@@ -594,7 +607,12 @@ public sealed class MainViewModel : ObservableObject
         }
 
         _translationTargetLanguage = language.Trim();
+        _translatedTitle = null;
+        _translatedHtml = null;
         OnPropertyChanged(nameof(TranslationTargetLanguage));
+        OnPropertyChanged(nameof(SelectedArticleDisplayTitle));
+        OnPropertyChanged(nameof(SelectedArticleHtml));
+        OnPropertyChanged(nameof(TranslationToolTip));
         await PersistAsync();
     }
 
@@ -935,6 +953,47 @@ public sealed class MainViewModel : ObservableObject
         });
     }
 
+    private async Task TranslateSelectedArticleAsync()
+    {
+        var article = SelectedArticle;
+        if (article is null || _isTranslating)
+        {
+            return;
+        }
+
+        _isTranslating = true;
+        OnPropertyChanged(nameof(TranslationToolTip));
+        TranslateSelectedArticleCommand.RaiseCanExecuteChanged();
+
+        try
+        {
+            var translatedTitleTask = _translationService.TranslateAsync(article.Title, _translationTargetLanguage, "text");
+            var articleBody = HtmlRenderer.ExtractDocumentBody(article.HtmlContent);
+            var translatedBodyTask = _translationService.TranslateAsync(articleBody, _translationTargetLanguage, "html");
+            await Task.WhenAll(translatedTitleTask, translatedBodyTask);
+
+            if (!ReferenceEquals(SelectedArticle, article))
+            {
+                return;
+            }
+
+            _translatedTitle = translatedTitleTask.Result;
+            _translatedHtml = HtmlRenderer.CreateDocument(string.Empty, translatedBodyTask.Result, string.Empty);
+            OnPropertyChanged(nameof(SelectedArticleDisplayTitle));
+            OnPropertyChanged(nameof(SelectedArticleHtml));
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"Article translation error: {exception.Message}");
+        }
+        finally
+        {
+            _isTranslating = false;
+            OnPropertyChanged(nameof(TranslationToolTip));
+            TranslateSelectedArticleCommand.RaiseCanExecuteChanged();
+        }
+    }
+
     private void ToggleTextToSpeech()
     {
         if (SelectedArticle is null)
@@ -954,7 +1013,7 @@ public sealed class MainViewModel : ObservableObject
             }
             else
             {
-                _textToSpeechService.Speak(SelectedArticle.Title, SelectedArticle.HtmlContent, TextToSpeechVolume, _textToSpeechVoiceId);
+                _textToSpeechService.Speak(_translatedTitle ?? SelectedArticle.Title, _translatedHtml ?? SelectedArticle.HtmlContent, TextToSpeechVolume, _textToSpeechVoiceId);
             }
 
             SetTextToSpeechState();
