@@ -261,7 +261,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ReadingTitleFontSize));
         _unreadSortOrder = state.UnreadSortOrder == "Oldest first" ? "Oldest first" : "Newest first";
         _groupBy = state.GroupBy == "Source" ? "Source" : "Date";
-        _appearance = state.Appearance is "Dark" or "System" ? state.Appearance : "Light";
+        _appearance = state.Appearance == "Dark" ? "Dark" : "Light";
         _displaySourceFavicons = state.DisplaySourceFavicons;
         _showAllArticlesList = state.ShowAllArticlesList;
         _showSavedList = state.ShowSavedList;
@@ -612,7 +612,7 @@ public sealed class MainViewModel : ObservableObject
 
         _unreadSortOrder = unreadSortOrder == "Oldest first" ? "Oldest first" : "Newest first";
         _groupBy = groupBy == "Source" ? "Source" : "Date";
-        _appearance = appearance is "Dark" or "System" ? appearance : "Light";
+        _appearance = appearance == "Dark" ? "Dark" : "Light";
         _autoRefreshIntervalMinutes = autoRefreshIntervalMinutes;
         _markAsReadDelaySeconds = markAsReadDelaySeconds;
         CancelReadDelay();

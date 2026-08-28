@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:models="clr-namespace:OpenRssReader.Models"
+        xmlns:hc="clr-namespace:HandyControl.Controls;assembly=HandyControl"
         mc:Ignorable="d"
         Title="Open RSS Reader v1.1"
         Width="1680"
@@ -23,11 +24,16 @@
         </Style>
         <Style x:Key="SoftCardBorderStyle" TargetType="Border">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="8" />
             <Setter Property="Margin" Value="0,0,0,4" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
-        <Style x:Key="IconButtonStyle" TargetType="Button">
+        <Style x:Key="IconButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Width" Value="34" />
             <Setter Property="Height" Value="34" />
             <Setter Property="Margin" Value="0,0,10,0" />
@@ -40,16 +46,131 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="SidebarToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="17">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border x:Name="ToolbarButtonSurface"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
-                                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="ToolbarButtonSurface" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="IconToggleButtonStyle" TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="SidebarFilterButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="FilterSurface" Background="{TemplateBinding Background}" CornerRadius="12">
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="FilterSurface" Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ToolTip">
+            <Setter Property="Background" Value="{DynamicResource ContentBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ReaderContextMenuStyle" TargetType="ContextMenu">
+            <Setter Property="Background" Value="{DynamicResource ContentBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <StackPanel IsItemsHost="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ReaderMenuItemStyle" TargetType="MenuItem">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="MenuItemSurface"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="MenuItemSurface" Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -68,9 +189,9 @@
                         <Style TargetType="DockPanel"><Style.Triggers><DataTrigger Binding="{Binding IsRoot}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style>
                     </DockPanel.Style>
                     <DockPanel.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Edit folder" Click="EditFolderMenuItem_Click" CommandParameter="{Binding}" />
-                            <MenuItem Header="Delete folder" Click="DeleteFolderMenuItem_Click" CommandParameter="{Binding}" />
+                        <ContextMenu Style="{StaticResource ReaderContextMenuStyle}">
+                            <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Edit folder" Click="EditFolderMenuItem_Click" CommandParameter="{Binding}" />
+                            <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Delete folder" Click="DeleteFolderMenuItem_Click" CommandParameter="{Binding}" />
                         </ContextMenu>
                     </DockPanel.ContextMenu>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center"><Path Data="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" Width="17" Height="17" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Style="{StaticResource SidebarSectionTitleTextStyle}" Text="{Binding Name}" Margin="0" VerticalAlignment="Center" /></StackPanel>
@@ -84,10 +205,10 @@
                         <DataTemplate DataType="{x:Type models:FeedSubscription}">
                             <Border Style="{StaticResource SoftCardBorderStyle}" MouseLeftButtonUp="FeedItem_MouseLeftButtonUp" Cursor="Hand">
                                 <Border.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="Edit feed" Click="EditFeedMenuItem_Click" CommandParameter="{Binding}" />
-                                        <MenuItem Header="Mark all as read" Click="MarkFeedAsReadMenuItem_Click" CommandParameter="{Binding}" />
-                                        <MenuItem Header="Delete feed" Click="DeleteFeedMenuItem_Click" CommandParameter="{Binding}" />
+                                    <ContextMenu Style="{StaticResource ReaderContextMenuStyle}">
+                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Edit feed" Click="EditFeedMenuItem_Click" CommandParameter="{Binding}" />
+                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Mark all as read" Click="MarkFeedAsReadMenuItem_Click" CommandParameter="{Binding}" />
+                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Delete feed" Click="DeleteFeedMenuItem_Click" CommandParameter="{Binding}" />
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <Grid>
@@ -116,71 +237,70 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="28,24,22,24">
+            <hc:ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="15,15,15,15">
                     <DockPanel Margin="0,0,0,24">
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                            <Button Style="{StaticResource IconButtonStyle}" Click="SettingsButton_Click" ToolTip="Settings">
-                                <Viewbox Width="18" Height="18"><Path Data="M21,16 V8 A2,2 0 0 0 20,6.27 L13,2.27 A2,2 0 0 0 11,2.27 L4,6.27 A2,2 0 0 0 3,8 V16 A2,2 0 0 0 4,17.73 L11,21.73 A2,2 0 0 0 13,21.73 L20,17.73 A2,2 0 0 0 21,16 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
+                        <Grid Width="250" Height="30" DockPanel.Dock="Right" Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource SidebarToolbarButtonStyle}" Click="SettingsButton_Click" ToolTip="Settings" Background="{DynamicResource SidebarBackgroundBrush}" Height="30px" HorizontalAlignment="Center" Margin="0">
+                                <Viewbox Width="20" Height="20"><Path Data="M21,16 V8 A2,2 0 0 0 20,6.27 L13,2.27 A2,2 0 0 0 11,2.27 L4,6.27 A2,2 0 0 0 3,8 V16 A2,2 0 0 0 4,17.73 L11,21.73 A2,2 0 0 0 13,21.73 L20,17.73 A2,2 0 0 0 21,16 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                             </Button>
-                            <Button Style="{StaticResource IconButtonStyle}" Command="{Binding RefreshAllCommand}" ToolTip="Refresh feeds">
+                            <Button Grid.Column="1" Style="{StaticResource SidebarToolbarButtonStyle}" Command="{Binding RefreshAllCommand}" ToolTip="Refresh feeds" Background="{DynamicResource SidebarBackgroundBrush}" Height="30px" HorizontalAlignment="Center" Margin="0">
                                 <Viewbox Width="20" Height="20"><Path Data="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                             </Button>
-                            <Button Style="{StaticResource IconButtonStyle}" Click="SubscribeButton_Click" ToolTip="Subscribe to feed">
-                                <Viewbox Width="18" Height="18"><Path Data="M12,2 A10,10 0 1,1 12,22 A10,10 0 1,1 12,2 M8,12 L16,12 M12,8 L12,16" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent" /></Viewbox>
+                            <Button Grid.Column="2" Style="{StaticResource SidebarToolbarButtonStyle}" Click="SubscribeButton_Click" ToolTip="Subscribe to feed" Background="{DynamicResource SidebarBackgroundBrush}" Height="30px" HorizontalAlignment="Center" Margin="0">
+                                <Viewbox Width="20" Height="20"><Path Data="M12,2 A10,10 0 1,1 12,22 A10,10 0 1,1 12,2 M8,12 L16,12 M12,8 L12,16" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent" /></Viewbox>
                             </Button>
-                            <Button Style="{StaticResource IconButtonStyle}" Click="CreateFolderButton_Click" ToolTip="Create folder">
+                            <Button Grid.Column="3" Style="{StaticResource SidebarToolbarButtonStyle}" Click="CreateFolderButton_Click" ToolTip="Create folder" Background="{DynamicResource SidebarBackgroundBrush}" Height="30px" HorizontalAlignment="Center" Margin="0">
                                 <Viewbox Width="20" Height="20"><Path Data="M12,10 L12,16 M9,13 L15,13 M20,20 A2,2 0 0,0 22,18 L22,8 A2,2 0 0,0 20,6 L12.1,6 A2,2 0 0,1 10.41,5.1 L9.6,3.9 A2,2 0 0,0 7.93,3 L4,3 A2,2 0 0,0 2,5 L2,18 A2,2 0 0,0 4,20 Z" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                             </Button>
-                        </StackPanel>
+                        </Grid>
                     </DockPanel>
                     <TextBlock Text="RSS Feeds" FontSize="38" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                     <TextBlock Text="{Binding LastRefreshLabel}" Margin="0,2,0,24" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}" />
-                    <Button Command="{Binding SelectAllCommand}" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Cursor="Hand" Padding="5" HorizontalContentAlignment="Stretch" Margin="0,0,0,8" Visibility="{Binding ShowAllArticlesList, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Text="All articles" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                    <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectAllCommand}" Cursor="Hand" Visibility="{Binding ShowAllArticlesList, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="All articles" HorizontalAlignment="Left" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="5,0,0,0"/>
                     </Button>
-                    <Button Command="{Binding SelectUnreadCommand}" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Cursor="Hand" Padding="5" HorizontalContentAlignment="Stretch" Margin="0,0,0,8" Visibility="{Binding ShowUnreadList, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Unread" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                            <TextBlock Grid.Column="1" Text="{Binding TotalUnreadCount}" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Visibility="{Binding HasUnreadItems, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                        </Grid>
+                    <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectUnreadCommand}" Cursor="Hand" Visibility="{Binding ShowUnreadList, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <TextBlock Text="Unread" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"  Margin="5,0,0,0"/>
+                            <TextBlock Text="{Binding TotalUnreadCount}" Margin="10,0,0,0" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Visibility="{Binding HasUnreadItems, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </StackPanel>
                     </Button>
-                    <Button Command="{Binding SelectSavedCommand}" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Cursor="Hand" Padding="5" HorizontalContentAlignment="Stretch" Margin="0,0,0,26" Visibility="{Binding ShowSavedList, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Text="Saved" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                            <TextBlock Grid.Column="1" Text="{Binding TotalSavedCount}" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Visibility="{Binding HasSavedItems, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                        </Grid>
+                    <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectSavedCommand}" Cursor="Hand" Margin="0,0,0,20" Visibility="{Binding ShowSavedList, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <TextBlock Text="Saved" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="5,0,0,0"/>
+                            <TextBlock Text="{Binding TotalSavedCount}" Margin="10,0,0,0" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Visibility="{Binding HasSavedItems, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </StackPanel>
                     </Button>
                     <ItemsControl ItemsSource="{Binding FeedGroups}" />
                 </StackPanel>
-            </ScrollViewer>
+            </hc:ScrollViewer>
         </Border>
         <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Left" Background="{DynamicResource SeparatorBrush}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
         <Border Grid.Column="2" Background="{DynamicResource ContentBackgroundBrush}">
             <DockPanel Margin="8,18,14,16">
                 <DockPanel DockPanel.Dock="Top" Margin="8,0,8,16">
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                        <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleFavoritesFilterCommand}" ToolTip="Toggle Read later filter">
-                            <Viewbox Width="19" Height="19">
+                        <ToggleButton Style="{StaticResource IconToggleButtonStyle}" Height="30" IsChecked="{Binding IsFavoritesFilterActive, Mode=OneWay}" Command="{Binding ToggleFavoritesFilterCommand}" ToolTip="Toggle Read later filter">
+                            <Viewbox Width="20" Height="20" Margin="-5,0,0,0">
                                 <Path Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeLineJoin="Round">
                                     <Path.Style>
                                         <Style TargetType="Path"><Setter Property="Data" Value="M6 2.5h12v19l-6-4-6 4z" /><Setter Property="Fill" Value="Transparent" /><Style.Triggers><DataTrigger Binding="{Binding IsFavoritesFilterActive}" Value="True"><Setter Property="Fill" Value="{DynamicResource IconBrush}" /></DataTrigger></Style.Triggers></Style>
                                     </Path.Style>
                                 </Path>
                             </Viewbox>
-                        </Button>
-                        <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ClearSearchCommand}" ToolTip="Clear search">
-                            <Viewbox Width="18" Height="18"><Path Data="M18,6 L6,18 M6,6 L18,18" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent" /></Viewbox>
+                        </ToggleButton>
+                        <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ClearSearchCommand}" ToolTip="Clear search" Background="{DynamicResource ContentBackgroundBrush}" Height="30px">
+                            <Viewbox Width="20" Height="20" Margin="-5,-5,0,0"><Path Data="M18,6 L6,18 M6,6 L18,18" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                         </Button>
                     </StackPanel>
-                    <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="14" Height="42" Margin="0,0,10,0">
-                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Background="Transparent" Padding="16,10" FontSize="15" Foreground="{DynamicResource InputTextBrush}" VerticalContentAlignment="Center" />
-                    </Border>
+                    <hc:SearchBar Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" hc:InfoElement.Placeholder="Search articles" IsRealTime="True" Height="42" Margin="0,0,10,0" Padding="16,10" FontSize="15" Foreground="{DynamicResource InputTextBrush}" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource SeparatorBrush}" />
                 </DockPanel>
                 <StackPanel DockPanel.Dock="Top" Margin="16,0,16,18">
                     <TextBlock Text="{Binding ActiveSectionTitle}" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
@@ -241,29 +361,30 @@
             </Grid.RowDefinitions>
             <DockPanel Margin="26,18,26,18" Grid.Row="0">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                    <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleSelectedFavoriteCommand}" ToolTip="Read later">
-                        <Viewbox Width="19" Height="19"><Path Data="M6 2.5h12v19l-6-4-6 4z" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeLineJoin="Round"><Path.Style><Style TargetType="Path"><Setter Property="Fill" Value="Transparent" /><Style.Triggers><DataTrigger Binding="{Binding SelectedArticle.IsFavorite}" Value="True"><Setter Property="Fill" Value="{DynamicResource IconBrush}" /></DataTrigger></Style.Triggers></Style></Path.Style></Path></Viewbox>
-                    </Button>
+                    <ToggleButton Style="{StaticResource IconToggleButtonStyle}" IsChecked="{Binding SelectedArticle.IsFavorite, Mode=OneWay}" Command="{Binding ToggleSelectedFavoriteCommand}" ToolTip="Read later">
+                        <Viewbox Width="20" Height="20" Margin="-5,0,0,0"><Path Data="M6 2.5h12v19l-6-4-6 4z" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeLineJoin="Round"><Path.Style><Style TargetType="Path"><Setter Property="Fill" Value="Transparent" /><Style.Triggers><DataTrigger Binding="{Binding SelectedArticle.IsFavorite}" Value="True"><Setter Property="Fill" Value="{DynamicResource IconBrush}" /></DataTrigger></Style.Triggers></Style></Path.Style></Path></Viewbox>
+                    </ToggleButton>
                     <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleSelectedReadCommand}" ToolTip="Read or unread">
-                        <Viewbox Width="19" Height="19"><Path Data="M12,2 A10,10 0 1,1 12,22 A10,10 0 1,1 12,2 M12,11 A1,1 0 1,1 12,13 A1,1 0 1,1 12,11" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent" /></Viewbox>
+                        <Viewbox Width="20" Height="20"><Path Data="M12,2 A10,10 0 1,1 12,22 A10,10 0 1,1 12,2 M12,11 A1,1 0 1,1 12,13 A1,1 0 1,1 12,11" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent" /></Viewbox>
                     </Button>
                     <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleSelectedSavedCommand}" ToolTip="Save article">
-                        <Viewbox Width="20" Height="20"><Path Data="M12 2v8 M16 6l-4 4-4-4 M4 14h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2 M6 18h.01 M10 18h.01" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"><Path.Style><Style TargetType="Path"><Style.Triggers><DataTrigger Binding="{Binding SelectedArticle.IsSaved}" Value="True"><Setter Property="Stroke" Value="{DynamicResource PrimaryTextBrush}" /></DataTrigger></Style.Triggers></Style></Path.Style></Path></Viewbox>
+                        <Viewbox Width="20" Height="20" Margin="0,-3,0,0"><Path Data="M12 2v8 M16 6l-4 4-4-4 M4 14h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2 M6 18h.01 M10 18h.01" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"><Path.Style><Style TargetType="Path"><Style.Triggers><DataTrigger Binding="{Binding SelectedArticle.IsSaved}" Value="True"><Setter Property="Stroke" Value="{DynamicResource PrimaryTextBrush}" /></DataTrigger></Style.Triggers></Style></Path.Style></Path></Viewbox>
                     </Button>
                     <Button Style="{StaticResource IconButtonStyle}" Command="{Binding OpenInBrowserCommand}" ToolTip="Open original article">
-                        <Viewbox Width="19" Height="19"><Path Data="M21,13 L21,19 A2,2 0 0,1 19,21 L5,21 A2,2 0 0,1 3,19 L3,5 A2,2 0 0,1 5,3 L11,3 M21,3 L12,12 M15,3 L21,3 L21,9" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
+                        <Viewbox Width="20" Height="20"><Path Data="M21,13 L21,19 A2,2 0 0,1 19,21 L5,21 A2,2 0 0,1 3,19 L3,5 A2,2 0 0,1 5,3 L11,3 M21,3 L12,12 M15,3 L21,3 L21,9" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                     </Button>
+                    <Border Width="1" Height="25" Margin="10,0" VerticalAlignment="Center" Background="{DynamicResource SeparatorBrush}" />
                     <Button Style="{StaticResource IconButtonStyle}" Command="{Binding DecreaseReadingSizeCommand}" ToolTip="Decrease reading size">
-                        <Viewbox Width="20" Height="20"><Path Data="M14 12 L18 16 L22 12 M18 16 V7 M2 16 L6.039 6.31 A0.5 0.5 0 0 1 6.962 6.31 L11 16 M3.304 13 H9.696" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
+                        <Viewbox Width="22" Height="22" Margin="0,-5,0,0"><Path Data="M14 12 L18 16 L22 12 M18 16 V7 M2 16 L6.039 6.31 A0.5 0.5 0 0 1 6.962 6.31 L11 16 M3.304 13 H9.696" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                     </Button>
                     <Button Style="{StaticResource IconButtonStyle}" Command="{Binding IncreaseReadingSizeCommand}" ToolTip="Increase reading size" Margin="0">
-                        <Viewbox Width="20" Height="20"><Path Data="M14 11 L18 7 L22 11 M18 16 V7 M2 16 L6.039 6.31 A0.5 0.5 0 0 1 6.962 6.31 L11 16 M3.304 13 H9.696" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
+                        <Viewbox Width="22" Height="22" Margin="0,-5,0,0"><Path Data="M14 11 L18 7 L22 11 M18 16 V7 M2 16 L6.039 6.31 A0.5 0.5 0 0 1 6.962 6.31 L11 16 M3.304 13 H9.696" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
                     </Button>
-                    <Border Width="1" Height="18" Margin="10,0" VerticalAlignment="Center" Background="{DynamicResource SeparatorBrush}" />
+                    <Border Width="1" Height="25" Margin="10,0" VerticalAlignment="Center" Background="{DynamicResource SeparatorBrush}" />
                     <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleTextToSpeechCommand}" ToolTip="{Binding TextToSpeechToolTip}">
-                        <Viewbox Width="19" Height="19"><Path Data="{Binding TextToSpeechButtonPath}" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" /></Viewbox>
+                        <Viewbox Width="16" Height="16" Margin="-5,1,0,0"><Path Data="{Binding TextToSpeechButtonPath}" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" Margin="-5,-5,0,0"/></Viewbox>
                     </Button>
-                    <Slider Width="78" Minimum="0" Maximum="100" Value="{Binding TextToSpeechVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="4,0,0,0" ToolTip="Reading volume" />
+                    <Slider Width="100" Minimum="0" Maximum="100" Value="{Binding TextToSpeechVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="4,0,0,0" ToolTip="Reading volume" />
                 </StackPanel>
             </DockPanel>
             <Grid Grid.Row="1" Margin="34,8,34,30">
@@ -276,7 +397,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Margin="0,0,0,16">
                         <TextBlock Text="{Binding SelectedArticle.DisplayDateLabel}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding SelectedArticle.Title}" Margin="0,10,0,12" FontFamily="{Binding ReadingFontFamily}" FontSize="{Binding ReadingTitleFontSize}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedArticle.Title}" Margin="0,10,0,12" FontFamily="{Binding ReadingTitleFontFamily}" FontSize="{Binding ReadingTitleFontSize}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding SelectedArticle.AuthorLine}" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" FontWeight="SemiBold" />
                     </StackPanel>
                 <WebBrowser x:Name="ArticleBrowser" Grid.Row="1"/>

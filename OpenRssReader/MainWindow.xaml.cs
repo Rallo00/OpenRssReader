@@ -177,20 +177,22 @@ public partial class MainWindow : Window
     private void ApplyAppearance()
     {
         var dark = _viewModel.Appearance == "Dark";
-        var resources = Application.Current.Resources;
-        resources["SidebarBackgroundBrush"] = resources[dark ? "DarkSidebarBrush" : "LightSidebarBrush"];
-        resources["ContentBackgroundBrush"] = resources[dark ? "DarkContentBrush" : "LightContentBrush"];
-        resources["SurfaceBackgroundBrush"] = resources[dark ? "DarkContentBrush" : "LightSidebarBrush"];
-        resources["HoverBackgroundBrush"] = resources[dark ? "DarkHoverBrush" : "LightHoverBrush"];
-        resources["InputBackgroundBrush"] = resources[dark ? "DarkInputBackgroundBrush" : "LightInputBackgroundBrush"];
-        resources["SelectionBackgroundBrush"] = resources[dark ? "DarkSidebarBrush" : "LightSelectionBrush"];
-        resources["SeparatorBrush"] = resources[dark ? "DarkContentBrush" : "LightSeparatorBrush"];
-        resources["SidebarTitleBrush"] = resources[dark ? "DarkSidebarTitleBrush" : "LightSidebarTitleBrush"];
-        resources["FeedNameBrush"] = resources[dark ? "DarkFeedNameBrush" : "LightFeedNameBrush"];
-        resources["PrimaryTextBrush"] = resources[dark ? "DarkTextBrush" : "LightPrimaryTextBrush"];
-        resources["SecondaryTextBrush"] = resources[dark ? "DarkSecondaryTextBrush" : "LightSecondaryTextBrush"];
-        resources["MutedTextBrush"] = resources[dark ? "DarkSecondaryTextBrush" : "LightMutedTextBrush"];
-        resources["IconBrush"] = resources[dark ? "DarkSecondaryTextBrush" : "LightIconBrush"];
-        resources["InputTextBrush"] = resources[dark ? "DarkInputTextBrush" : "LightInputTextBrush"];
+        // Read immutable palette entries from App, then override them only for this window.
+        var palette = Application.Current.Resources;
+        var resources = Resources;
+        resources["SidebarBackgroundBrush"] = palette[dark ? "DarkSidebarBrush" : "LightSidebarBrush"];
+        resources["ContentBackgroundBrush"] = palette[dark ? "DarkContentBrush" : "LightContentBrush"];
+        resources["SurfaceBackgroundBrush"] = palette[dark ? "DarkContentBrush" : "LightSidebarBrush"];
+        resources["HoverBackgroundBrush"] = palette[dark ? "DarkHoverBrush" : "LightHoverBrush"];
+        resources["InputBackgroundBrush"] = palette[dark ? "DarkInputBackgroundBrush" : "LightInputBackgroundBrush"];
+        resources["SelectionBackgroundBrush"] = palette[dark ? "DarkSidebarBrush" : "LightSelectionBrush"];
+        resources["SeparatorBrush"] = palette[dark ? "DarkContentBrush" : "LightSeparatorBrush"];
+        resources["SidebarTitleBrush"] = palette[dark ? "DarkSidebarTitleBrush" : "LightSidebarTitleBrush"];
+        resources["FeedNameBrush"] = palette[dark ? "DarkFeedNameBrush" : "LightFeedNameBrush"];
+        resources["PrimaryTextBrush"] = palette[dark ? "DarkTextBrush" : "LightPrimaryTextBrush"];
+        resources["SecondaryTextBrush"] = palette[dark ? "DarkSecondaryTextBrush" : "LightSecondaryTextBrush"];
+        resources["MutedTextBrush"] = palette[dark ? "DarkSecondaryTextBrush" : "LightMutedTextBrush"];
+        resources["IconBrush"] = palette[dark ? "DarkSecondaryTextBrush" : "LightIconBrush"];
+        resources["InputTextBrush"] = palette[dark ? "DarkInputTextBrush" : "LightInputTextBrush"];
     }
 }
