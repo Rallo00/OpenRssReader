@@ -12,6 +12,7 @@ namespace OpenRssReader.Services;
 
 public sealed class FeedService
 {
+    private const string ReaderUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
     private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
     private readonly HashSet<string> _articleDateLookups = new(StringComparer.OrdinalIgnoreCase);
 
@@ -23,26 +24,33 @@ public sealed class FeedService
             return false;
         }
 
-        article.RequiresArticleContentFetch = false;
         try
         {
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
-            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.UserAgent.ParseAdd("OpenRssReader/1.0");
-            using var response = await _httpClient.SendAsync(request, timeout.Token);
-            if (!response.IsSuccessStatusCode)
+            foreach (var candidate in GetArticleContentUrls(uri))
             {
-                return false;
+                using var request = new HttpRequestMessage(HttpMethod.Get, candidate);
+                ConfigureRequestHeaders(request);
+                using var response = await _httpClient.SendAsync(request, timeout.Token);
+                if (!response.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                var html = await response.Content.ReadAsStringAsync(timeout.Token);
+                var content = ExtractArticleContent(html, candidate, article.Title);
+                if (content is null)
+                {
+                    continue;
+                }
+
+                article.HtmlContent = HtmlRenderer.CreateDocument(article.Title, content, article.Summary);
+                article.ThumbnailUrl = HtmlRenderer.ExtractImageUrl(content) ?? ExtractOpenGraphImage(html, candidate) ?? article.ThumbnailUrl;
+                article.RequiresArticleContentFetch = false;
+                return true;
             }
 
-            var content = ExtractArticleContent(await response.Content.ReadAsStringAsync(timeout.Token), uri, article.Title);
-            if (content is null)
-            {
-                return false;
-            }
-
-            article.HtmlContent = HtmlRenderer.CreateDocument(article.Title, content, article.Summary);
-            return true;
+            return false;
         }
         catch (OperationCanceledException)
         {
@@ -57,11 +65,11 @@ public sealed class FeedService
     public async Task<IReadOnlyList<ArticleItem>> FetchFeedAsync(FeedSubscription subscription)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, subscription.Url);
-        request.Headers.UserAgent.ParseAdd("OpenRssReader/1.0");
+        ConfigureRequestHeaders(request);
         using var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
-        var xml = await response.Content.ReadAsStringAsync();
+        var xml = NormalizeDocumentContent(await response.Content.ReadAsStringAsync());
         if (xml.TrimStart().StartsWith('{'))
         {
             return ParseJsonFeed(subscription, xml);
@@ -89,7 +97,7 @@ public sealed class FeedService
         }
 
         var candidate = initialUri;
-        var content = await DownloadAsync(candidate);
+        var content = NormalizeDocumentContent(await DownloadAsync(candidate));
         if (!LooksLikeFeed(content))
         {
             var document = XDocument.Parse(content, LoadOptions.PreserveWhitespace);
@@ -103,7 +111,7 @@ public sealed class FeedService
             {
                 throw new InvalidOperationException("No valid RSS, Atom, or JSON feed was found at this address.");
             }
-            content = await DownloadAsync(candidate);
+            content = NormalizeDocumentContent(await DownloadAsync(candidate));
         }
 
         var name = GetFeedTitle(content, candidate.Host);
@@ -123,7 +131,7 @@ public sealed class FeedService
     private async Task<string> DownloadAsync(Uri address)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, address);
-        request.Headers.UserAgent.ParseAdd("OpenRssReader/1.0");
+        ConfigureRequestHeaders(request);
         using var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync();
@@ -157,7 +165,7 @@ public sealed class FeedService
 
         return items.EnumerateArray().Take(50).Select(item =>
         {
-            var title = item.TryGetProperty("title", out var titleValue) ? titleValue.GetString() ?? "Untitled article" : "Untitled article";
+            var title = DecodeHtmlText(item.TryGetProperty("title", out var titleValue) ? titleValue.GetString() ?? "Untitled article" : "Untitled article");
             var link = item.TryGetProperty("url", out var urlValue) ? urlValue.GetString() ?? subscription.Url : subscription.Url;
             var summary = item.TryGetProperty("summary", out var summaryValue) ? summaryValue.GetString() ?? string.Empty : string.Empty;
             var hasFullContent = item.TryGetProperty("content_html", out var contentValue) && !string.IsNullOrWhiteSpace(contentValue.GetString());
@@ -185,21 +193,23 @@ public sealed class FeedService
                 FaviconUrl = subscription.FaviconUrl,
                 ThumbnailBrush = subscription.AccentBrush,
                 HeroBrush = BrushFactory.CreateHeroBrush(subscription.AccentHex),
-                RequiresArticleContentFetch = NeedsArticleContentFetch(link, summary, hasFullContent)
+                RequiresArticleContentFetch = NeedsArticleContentFetch(link, content)
             };
         }).ToList();
     }
 
     private static bool LooksLikeFeed(string content)
     {
-        var trimmed = content.TrimStart();
+        var trimmed = NormalizeDocumentContent(content).TrimStart();
         return trimmed.StartsWith("{") || trimmed.StartsWith("<rss", StringComparison.OrdinalIgnoreCase) ||
-            trimmed.StartsWith("<feed", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase) &&
-            (trimmed.Contains("<rss", StringComparison.OrdinalIgnoreCase) || trimmed.Contains("<feed", StringComparison.OrdinalIgnoreCase));
+            trimmed.StartsWith("<feed", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("<rdf:RDF", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase) &&
+            (trimmed.Contains("<rss", StringComparison.OrdinalIgnoreCase) || trimmed.Contains("<feed", StringComparison.OrdinalIgnoreCase) || trimmed.Contains("<rdf:RDF", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string GetFeedTitle(string content, string fallback)
     {
+        content = NormalizeDocumentContent(content);
         if (content.TrimStart().StartsWith('{'))
         {
             using var json = JsonDocument.Parse(content);
@@ -223,7 +233,7 @@ public sealed class FeedService
         var link = isAtom
             ? item.Elements().FirstOrDefault(x => x.Name.LocalName == "link" && x.Attribute("href") is not null)?.Attribute("href")?.Value
             : item.Elements().FirstOrDefault(x => x.Name.LocalName == "link")?.Value;
-        var title = GetElementValue(item, "title", "Untitled article") ?? "Untitled article";
+        var title = DecodeHtmlText(GetElementValue(item, "title", "Untitled article") ?? "Untitled article");
         var summary = HtmlRenderer.ToPlainText(GetElementValue(item, isAtom ? "summary" : "description", "No summary available."));
         var embeddedContent = GetElementValue(item, "encoded", null) ?? GetElementValue(item, "content", null);
         var hasFullContent = !string.IsNullOrWhiteSpace(embeddedContent);
@@ -258,30 +268,59 @@ public sealed class FeedService
             HasPublicationDate = publishedAt.HasValue,
             Author = HtmlRenderer.ToPlainText(author ?? subscription.Name).Trim(),
             ThumbnailLabel = CreateThumbnailLabel(subscription.Name),
-            ThumbnailUrl = HtmlRenderer.ExtractImageUrl(content),
+            ThumbnailUrl = HtmlRenderer.ExtractImageUrl(content) ?? GetMediaThumbnailUrl(item),
             FaviconUrl = subscription.FaviconUrl,
             ThumbnailBrush = subscription.AccentBrush,
             HeroBrush = BrushFactory.CreateHeroBrush(subscription.AccentHex),
-            RequiresArticleContentFetch = NeedsArticleContentFetch(link ?? subscription.Url, summary, hasFullContent)
+            RequiresArticleContentFetch = NeedsArticleContentFetch(link ?? subscription.Url, content)
         };
     }
 
-    private static bool NeedsArticleContentFetch(string link, string summary, bool hasFullContent)
+    private static bool NeedsArticleContentFetch(string link, string content)
     {
-        if (hasFullContent || !Uri.TryCreate(link, UriKind.Absolute, out var uri) ||
+        if (!Uri.TryCreate(link, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
             return false;
         }
 
-        // The Sole 24 Ore RSS entries are abstracts, including the longer ones.
+        var plainText = HtmlRenderer.ToPlainText(content);
+        // These publishers expose excerpts that can exceed the usual short-content threshold.
         return uri.Host.EndsWith("ilsole24ore.com", StringComparison.OrdinalIgnoreCase) ||
-            HtmlRenderer.ToPlainText(summary).Length < 900;
+            uri.Host.EndsWith("ansa.it", StringComparison.OrdinalIgnoreCase) ||
+            uri.Host.EndsWith("elpais.com", StringComparison.OrdinalIgnoreCase) ||
+            uri.Host.EndsWith("france24.com", StringComparison.OrdinalIgnoreCase) ||
+            uri.Host.EndsWith("ec.europa.eu", StringComparison.OrdinalIgnoreCase) ||
+            uri.Host.EndsWith("consilium.europa.eu", StringComparison.OrdinalIgnoreCase) ||
+            plainText.Contains("Seguir leyendo", StringComparison.OrdinalIgnoreCase) ||
+            plainText.Length < 900;
+    }
+
+    private static string GetMediaThumbnailUrl(XElement item)
+    {
+        return item.Elements()
+            .FirstOrDefault(element =>
+                element.Name.LocalName is "content" or "thumbnail" or "enclosure" &&
+                !string.IsNullOrWhiteSpace(element.Attribute("url")?.Value))
+            ?.Attribute("url")?.Value
+            ?.Trim() ?? string.Empty;
     }
 
     private static string? ExtractArticleContent(string html, Uri baseUri, string title)
     {
-        var article = ExtractSole24OreArticleBody(html, baseUri) ?? FindBestContentContainer(html);
+        if (html.Contains("captcha-delivery", StringComparison.OrdinalIgnoreCase) ||
+            html.Contains("Browser check", StringComparison.OrdinalIgnoreCase) ||
+            html.Contains("Please enable JS", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var article = ExtractAnsaArticleBody(html, baseUri) ??
+            ExtractCouncilOfTheEuropeanUnionArticleBody(html, baseUri) ??
+            ExtractMotosprintArticleBody(html, baseUri) ??
+            ExtractSole24OreArticleBody(html, baseUri) ??
+            ExtractStructuredArticleBody(html, baseUri) ??
+            FindBestContentContainer(html);
         if (string.IsNullOrWhiteSpace(article))
         {
             return null;
@@ -296,7 +335,207 @@ public sealed class FeedService
             return null;
         }
 
-        return MakeUrlsAbsolute(article, baseUri);
+        article = MakeUrlsAbsolute(article, baseUri);
+        if (!Regex.IsMatch(article, @"<img\b", RegexOptions.IgnoreCase) && ExtractOpenGraphImage(html, baseUri) is { } image)
+        {
+            article = $"<img src=\"{System.Net.WebUtility.HtmlEncode(image)}\" alt=\"\" />" + article;
+        }
+
+        return article;
+    }
+
+    private static string? ExtractAnsaArticleBody(string html, Uri source)
+    {
+        if (!source.Host.EndsWith("ansa.it", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var body = FindElements(html, "div", attributes =>
+                HasCssClasses(attributes, "post-single-text", "rich-text", "news-txt"))
+            .Where(IsVisible)
+            .OrderByDescending(element => HtmlRenderer.ToPlainText(element).Length)
+            .FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return null;
+        }
+
+        // The selected body itself is a rich-text div; discard only nested rich-text blocks.
+        var nestedRichText = FindElements(body, "div", attributes => HasCssClasses(attributes, "rich-text"))
+            .Where(element => !string.Equals(element, body, StringComparison.Ordinal))
+            .OrderByDescending(element => element.Length);
+        foreach (var element in nestedRichText)
+        {
+            body = body.Replace(element, string.Empty, StringComparison.Ordinal);
+        }
+
+        var image = ExtractAnsaArticleImage(html, source);
+        var imageMarkup = image is null
+            ? string.Empty
+            : $"<img src=\"{System.Net.WebUtility.HtmlEncode(image)}\" alt=\"\" />";
+        return imageMarkup + body.Trim();
+    }
+
+    private static string? ExtractAnsaArticleImage(string html, Uri source)
+    {
+        var figure = FindElements(html, "figure", attributes => HasCssClasses(attributes, "image"))
+            .FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(figure))
+        {
+            return null;
+        }
+
+        var image = Regex.Match(figure, @"<img\b[^>]*\bsrc\s*=\s*(['""])(?<url>.*?)\1", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        if (!image.Success)
+        {
+            return null;
+        }
+
+        var imageUrl = System.Net.WebUtility.HtmlDecode(image.Groups["url"].Value).Trim();
+        return Uri.TryCreate(source, imageUrl, out var absolute) && absolute.Scheme is "http" or "https"
+            ? absolute.AbsoluteUri
+            : null;
+    }
+
+    private static string? ExtractCouncilOfTheEuropeanUnionArticleBody(string html, Uri source)
+    {
+        if (!source.Host.EndsWith("consilium.europa.eu", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return FindElements(html, "section", attributes => HasCssClasses(attributes, "gsc-main-section"))
+            .Where(IsVisible)
+            .OrderByDescending(element => HtmlRenderer.ToPlainText(element).Length)
+            .FirstOrDefault();
+    }
+
+    private static string? ExtractMotosprintArticleBody(string html, Uri source)
+    {
+        if (!source.Host.EndsWith("motosprint.it", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var body = FindElements(html, "div", attributes => HasCssClassStartingWith(attributes, "RichText_wrap__"))
+            .Where(IsVisible)
+            .OrderByDescending(element => HtmlRenderer.ToPlainText(element).Length)
+            .FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return null;
+        }
+
+        // Keep the article wrapper and remove only its embedded enrichment blocks.
+        body = RemoveMatchingElements(body, "div", attributes => HasCssClassStartingWith(attributes, "RichText_enrichment"));
+
+        var image = ExtractMotosprintArticleImage(html, source);
+        var imageMarkup = image is null
+            ? string.Empty
+            : $"<img src=\"{System.Net.WebUtility.HtmlEncode(image)}\" alt=\"\" />";
+        return imageMarkup + body.Trim();
+    }
+
+    private static string? ExtractMotosprintArticleImage(string html, Uri source)
+    {
+        var videoImage = Regex.Matches(html, @"<video\b[^>]*>", RegexOptions.IgnoreCase)
+            .Select(match => GetHtmlAttribute(match.Value, "poster"))
+            .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
+        var presentationImage = Regex.Matches(html, @"<img\b[^>]*>", RegexOptions.IgnoreCase)
+            .Select(match => match.Value)
+            .Where(tag => string.Equals(GetHtmlAttribute(tag, "role"), "presentation", StringComparison.OrdinalIgnoreCase))
+            .Select(tag => GetHtmlAttribute(tag, "src"))
+            .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
+        var imageUrl = videoImage ?? presentationImage;
+        if (string.IsNullOrWhiteSpace(imageUrl) || !Uri.TryCreate(source, System.Net.WebUtility.HtmlDecode(imageUrl), out var imageUri))
+        {
+            return null;
+        }
+
+        return imageUri.Scheme == Uri.UriSchemeHttp
+            ? new UriBuilder(imageUri) { Scheme = Uri.UriSchemeHttps, Port = -1 }.Uri.AbsoluteUri
+            : imageUri.AbsoluteUri;
+    }
+
+    private static bool HasCssClasses(string attributes, params string[] classes)
+    {
+        var classValue = GetHtmlAttribute(attributes, "class");
+        if (string.IsNullOrWhiteSpace(classValue))
+        {
+            return false;
+        }
+
+        var available = classValue.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        return classes.All(required => available.Contains(required, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static bool HasCssClassStartingWith(string attributes, string prefix)
+    {
+        var classValue = GetHtmlAttribute(attributes, "class");
+        return !string.IsNullOrWhiteSpace(classValue) && classValue.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Any(value => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string? ExtractStructuredArticleBody(string html, Uri source)
+    {
+        foreach (Match script in Regex.Matches(html, "<script\\b[^>]*type\\s*=\\s*(['\"])application/ld\\+json\\1[^>]*>(?<json>.*?)</script\\s*>", RegexOptions.IgnoreCase | RegexOptions.Singleline))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(script.Groups["json"].Value);
+                var body = FindStructuredArticleBody(document.RootElement);
+                if (string.IsNullOrWhiteSpace(body) || HtmlRenderer.ToPlainText(body).Length < 220)
+                {
+                    continue;
+                }
+
+                var paragraphs = Regex.Split(HtmlRenderer.ToPlainText(body), @"(?:\r?\n\s*){2,}")
+                    .Select(paragraph => paragraph.Trim())
+                    .Where(paragraph => paragraph.Length > 0)
+                    .Select(paragraph => $"<p>{System.Net.WebUtility.HtmlEncode(paragraph)}</p>");
+                return string.Concat(paragraphs);
+            }
+            catch (JsonException)
+            {
+                // A page can contain non-JSON data in a JSON-LD script; try the next script.
+            }
+        }
+
+        return null;
+    }
+
+    private static string? FindStructuredArticleBody(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            if (element.TryGetProperty("articleBody", out var articleBody) && articleBody.ValueKind == JsonValueKind.String)
+            {
+                return articleBody.GetString();
+            }
+
+            foreach (var property in element.EnumerateObject())
+            {
+                var nestedBody = FindStructuredArticleBody(property.Value);
+                if (!string.IsNullOrWhiteSpace(nestedBody))
+                {
+                    return nestedBody;
+                }
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+            {
+                var nestedBody = FindStructuredArticleBody(item);
+                if (!string.IsNullOrWhiteSpace(nestedBody))
+                {
+                    return nestedBody;
+                }
+            }
+        }
+
+        return null;
     }
 
     private static string? ExtractSole24OreArticleBody(string html, Uri source)
@@ -497,6 +736,38 @@ public sealed class FeedService
         return element.Elements().FirstOrDefault(x => x.Name.LocalName == localName)?.Value ?? fallback;
     }
 
+    private static string DecodeHtmlText(string value)
+    {
+        var decoded = System.Net.WebUtility.HtmlDecode(value);
+        return string.Equals(decoded, value, StringComparison.Ordinal)
+            ? decoded
+            : System.Net.WebUtility.HtmlDecode(decoded);
+    }
+
+    private static string NormalizeDocumentContent(string content) => content.TrimStart('\uFEFF', '\u200B');
+
+    private static IEnumerable<Uri> GetArticleContentUrls(Uri source)
+    {
+        yield return source;
+
+        if (source.Host.EndsWith("elpais.com", StringComparison.OrdinalIgnoreCase) && !source.AbsolutePath.EndsWith("/amp", StringComparison.OrdinalIgnoreCase))
+        {
+            var amp = new UriBuilder(source)
+            {
+                Path = source.AbsolutePath.TrimEnd('/') + "/amp",
+                Query = string.Empty
+            };
+            yield return amp.Uri;
+        }
+    }
+
+    private static void ConfigureRequestHeaders(HttpRequestMessage request)
+    {
+        request.Headers.UserAgent.ParseAdd(ReaderUserAgent);
+        request.Headers.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        request.Headers.AcceptLanguage.ParseAdd("en-US,en;q=0.9,it;q=0.8");
+    }
+
     private static string? GetJsonString(JsonElement item, string propertyName) =>
         item.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
@@ -529,7 +800,7 @@ public sealed class FeedService
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromSeconds(8));
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.UserAgent.ParseAdd("OpenRssReader/1.0");
+            ConfigureRequestHeaders(request);
             using var response = await _httpClient.SendAsync(request, timeout.Token);
             if (!response.IsSuccessStatusCode)
             {

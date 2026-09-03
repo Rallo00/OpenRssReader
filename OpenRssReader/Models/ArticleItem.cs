@@ -12,6 +12,7 @@ public sealed class ArticleItem : ObservableObject
     private DateTimeOffset _publishedAt;
     private bool _hasPublicationDate;
     private string _htmlContent = string.Empty;
+    private string _thumbnailUrl = string.Empty;
 
     public required string Id { get; init; }
     public required string FeedId { get; init; }
@@ -43,7 +44,17 @@ public sealed class ArticleItem : ObservableObject
     }
     public string Author { get; init; } = "Unknown author";
     public string ThumbnailLabel { get; init; } = "RSS";
-    public string ThumbnailUrl { get; init; } = string.Empty;
+    public string ThumbnailUrl
+    {
+        get => _thumbnailUrl;
+        set
+        {
+            if (SetProperty(ref _thumbnailUrl, value))
+            {
+                OnPropertyChanged(nameof(HasThumbnail));
+            }
+        }
+    }
     public string FaviconUrl { get; init; } = string.Empty;
     public required SolidColorBrush ThumbnailBrush { get; init; }
     public required SolidColorBrush HeroBrush { get; init; }

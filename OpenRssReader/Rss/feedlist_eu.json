@@ -1,0 +1,34 @@
+﻿[
+    {
+      "Title": "European Council for Foreign Relations",
+      "Link": "https://ecfr.eu/feed/"
+    },
+    {
+      "Title": "European Commission | Press releases",
+      "Link": "https://ec.europa.eu/commission/presscorner/api/rss?language=en"
+    },
+    {
+      "Title": "Council of the European Union | Press releases",
+      "Link": "https://skribi.consilium.europa.eu/en/rss/pressreleases.ashx"
+    },
+    {
+      "Title": "European Parliament | Top stories",
+      "Link": "https://www.europarl.europa.eu/rss/doc/top-stories/en.xml"
+    },
+    {
+      "Title": "European Parliament | Press releases",
+      "Link": "https://www.europarl.europa.eu/rss/doc/press-releases/en.xml"
+    },
+    {
+      "Title": "European Parliament | Plenary press releases",
+      "Link": "https://www.europarl.europa.eu/rss/doc/press-releases-plenary/en.xml"
+    },
+    {
+      "Title": "European Parliament | Committee press releases",
+      "Link": "https://www.europarl.europa.eu/rss/doc/press-releases-committees/en.xml"
+    },
+    {
+      "Title": "European Central Bank | Press releases",
+      "Link": "https://www.ecb.europa.eu/rss/press.html"
+    }
+]

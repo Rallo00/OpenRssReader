@@ -21,6 +21,17 @@
   <ItemGroup>
     <!-- A stale root-level copy duplicates the active ViewModels/MainViewModel.cs. -->
     <Compile Remove="MainViewModel.cs" />
+    <Compile Remove="AppState.cs" />
+    <Compile Remove="HtmlRenderer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Localization\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="rss\feedlist_*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Data;
 using OpenRssReader.Helpers;
+using OpenRssReader.Localization;
 using OpenRssReader.Models;
 using OpenRssReader.Services;
 
@@ -25,7 +26,7 @@ public sealed class MainViewModel : ObservableObject
     private ArticleItem? _selectedArticle;
     private DateTimeOffset? _lastRefreshAt;
     private string _searchText = string.Empty;
-    private string _activeSectionTitle = "Unread";
+    private string _activeSectionTitle = LocalizationManager.Instance["Main.Unread"];
     private string _activeSectionSubtitle = "Loading articles...";
     private bool _showFavoritesOnly;
     private bool _showSavedOnly;
@@ -45,6 +46,7 @@ public sealed class MainViewModel : ObservableObject
     private string _unreadSortOrder = "Newest first";
     private string _groupBy = "Date";
     private string _appearance = "Light";
+    private string _applicationLanguage = "en";
     private bool _displaySourceFavicons = true;
     private bool _showAllArticlesList = true;
     private bool _showSavedList = true;
@@ -60,6 +62,7 @@ public sealed class MainViewModel : ObservableObject
     {
         FeedGroups = [];
         VisibleArticles = [];
+        LocalizationManager.Instance.PropertyChanged += LocalizationManagerOnPropertyChanged;
         ApplyGrouping();
         RefreshAllCommand = new RelayCommand(async () => await RefreshFeedsAsync());
         SelectAllCommand = new RelayCommand(() =>
@@ -179,7 +182,9 @@ public sealed class MainViewModel : ObservableObject
         _readingFontSize,
         _appearance == "Dark");
     public string SelectedArticleDisplayTitle => _translatedTitle ?? SelectedArticle?.Title ?? string.Empty;
-    public string LastRefreshLabel => _lastRefreshAt is null ? "Not refreshed yet" : $"Updated on {_lastRefreshAt.Value.ToLocalTime():dd MMM yyyy HH:mm}";
+    public string LastRefreshLabel => _lastRefreshAt is null
+        ? LocalizationManager.Instance["Main.NotRefreshedYet"]
+        : LocalizationManager.Instance.Get("Main.UpdatedOn", _lastRefreshAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm"));
     public string ActiveSectionTitle
     {
         get => _activeSectionTitle;
@@ -207,7 +212,9 @@ public sealed class MainViewModel : ObservableObject
     public int ReadingTitleFontSize => _readingTitleFontSize;
     public string TextToSpeechVoiceId => _textToSpeechVoiceId;
     public string TranslationTargetLanguage => _translationTargetLanguage;
-    public string TranslationToolTip => _isTranslating ? "Translating article..." : $"Translate to {_translationTargetLanguage}";
+    public string TranslationToolTip => _isTranslating
+        ? LocalizationManager.Instance["Main.TranslatingArticle"]
+        : LocalizationManager.Instance.Get("Main.TranslateTo", _translationTargetLanguage);
     public bool DisplaySourceFavicons => _displaySourceFavicons;
     public bool ShowAllArticlesList => _showAllArticlesList;
     public bool ShowSavedList => _showSavedList;
@@ -215,13 +222,16 @@ public sealed class MainViewModel : ObservableObject
     public string UnreadSortOrder => _unreadSortOrder;
     public string GroupBy => _groupBy;
     public string Appearance => _appearance;
+    public string ApplicationLanguage => _applicationLanguage;
     public int AutoRefreshIntervalMinutes => _autoRefreshIntervalMinutes;
     public int MarkAsReadDelaySeconds => _markAsReadDelaySeconds;
     public bool IsTextToSpeechActive => _isTextToSpeechActive;
     public string TextToSpeechButtonPath => _isTextToSpeechActive && !_isTextToSpeechPaused
         ? "M7 5h4v14H7z M13 5h4v14h-4z"
         : "M8 5v14l11-7z";
-    public string TextToSpeechToolTip => _isTextToSpeechActive && !_isTextToSpeechPaused ? "Pause reading" : "Read article aloud";
+    public string TextToSpeechToolTip => _isTextToSpeechActive && !_isTextToSpeechPaused
+        ? LocalizationManager.Instance["Main.PauseReading"]
+        : LocalizationManager.Instance["Main.ReadArticleAloud"];
     public int TextToSpeechVolume
     {
         get => _textToSpeechVolume;
@@ -252,8 +262,22 @@ public sealed class MainViewModel : ObservableObject
     public async ValueTask DisposeAsync()
     {
         CancelReadDelay();
+        LocalizationManager.Instance.PropertyChanged -= LocalizationManagerOnPropertyChanged;
         _textToSpeechService.Dispose();
         await PersistAsync();
+    }
+
+    private void LocalizationManagerOnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != "Item[]")
+        {
+            return;
+        }
+
+        OnPropertyChanged(nameof(LastRefreshLabel));
+        OnPropertyChanged(nameof(TranslationToolTip));
+        OnPropertyChanged(nameof(TextToSpeechToolTip));
+        RefreshVisibleArticles();
     }
 
     private void LoadState(AppState state)
@@ -268,10 +292,13 @@ public sealed class MainViewModel : ObservableObject
         _readingTitleFontSize = Math.Clamp(state.ReadingTitleFontSize <= 0 ? 40 : state.ReadingTitleFontSize, 24, 64);
         _textToSpeechVoiceId = state.TextToSpeechVoiceId ?? string.Empty;
         _translationTargetLanguage = string.IsNullOrWhiteSpace(state.TranslationTargetLanguage) ? "English" : state.TranslationTargetLanguage;
+        _applicationLanguage = string.IsNullOrWhiteSpace(state.ApplicationLanguage) ? "en" : state.ApplicationLanguage;
+        LocalizationManager.Instance.SetLanguage(_applicationLanguage);
         OnPropertyChanged(nameof(ReadingFontFamily));
         OnPropertyChanged(nameof(ReadingTitleFontFamily));
         OnPropertyChanged(nameof(ReadingFontSize));
         OnPropertyChanged(nameof(ReadingTitleFontSize));
+        OnPropertyChanged(nameof(ApplicationLanguage));
         _unreadSortOrder = state.UnreadSortOrder == "Oldest first" ? "Oldest first" : "Newest first";
         _groupBy = state.GroupBy == "Source" ? "Source" : "Date";
         _appearance = state.Appearance is "Dark" or "System" ? state.Appearance : "Light";
@@ -616,7 +643,7 @@ public sealed class MainViewModel : ObservableObject
         await PersistAsync();
     }
 
-    public async Task SetGeneralPreferencesAsync(string unreadSortOrder, string groupBy, string appearance, int autoRefreshIntervalMinutes, int markAsReadDelaySeconds, bool displaySourceFavicons, bool showAllArticlesList, bool showSavedList, bool showUnreadList)
+    public async Task SetGeneralPreferencesAsync(string unreadSortOrder, string groupBy, string appearance, int autoRefreshIntervalMinutes, int markAsReadDelaySeconds, bool displaySourceFavicons, bool showAllArticlesList, bool showSavedList, bool showUnreadList, string applicationLanguage)
     {
         if (autoRefreshIntervalMinutes is < 1 or > 1440)
         {
@@ -631,6 +658,8 @@ public sealed class MainViewModel : ObservableObject
         _unreadSortOrder = unreadSortOrder == "Oldest first" ? "Oldest first" : "Newest first";
         _groupBy = groupBy == "Source" ? "Source" : "Date";
         _appearance = appearance is "Dark" or "System" ? appearance : "Light";
+        _applicationLanguage = string.IsNullOrWhiteSpace(applicationLanguage) ? "en" : applicationLanguage;
+        LocalizationManager.Instance.SetLanguage(_applicationLanguage);
         _autoRefreshIntervalMinutes = autoRefreshIntervalMinutes;
         _markAsReadDelaySeconds = markAsReadDelaySeconds;
         CancelReadDelay();
@@ -646,6 +675,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowSavedList));
         OnPropertyChanged(nameof(ShowUnreadList));
         OnPropertyChanged(nameof(Appearance));
+        OnPropertyChanged(nameof(ApplicationLanguage));
         OnPropertyChanged(nameof(AutoRefreshIntervalMinutes));
         OnPropertyChanged(nameof(MarkAsReadDelaySeconds));
         OnPropertyChanged(nameof(SelectedArticleHtml));
@@ -806,8 +836,13 @@ public sealed class MainViewModel : ObservableObject
             VisibleArticles.Add(article);
         }
 
-        ActiveSectionTitle = _selectedFeedId is not null ? _allFeeds.FirstOrDefault(feed => feed.Id == _selectedFeedId)?.Name ?? "Feed" : _showSavedOnly ? "Saved" : _showFavoritesOnly ? "Read later" : _showUnreadOnly ? "Unread" : "All Articles";
-        ActiveSectionSubtitle = $"{VisibleArticles.Count} visible items - {VisibleArticles.Count(article => article.IsUnread)} to read";
+        ActiveSectionTitle = _selectedFeedId is not null
+            ? _allFeeds.FirstOrDefault(feed => feed.Id == _selectedFeedId)?.Name ?? LocalizationManager.Instance["Main.Feed"]
+            : _showSavedOnly ? LocalizationManager.Instance["Main.Saved"]
+            : _showFavoritesOnly ? LocalizationManager.Instance["Main.ReadLaterSection"]
+            : _showUnreadOnly ? LocalizationManager.Instance["Main.Unread"]
+            : LocalizationManager.Instance["Main.AllArticles"];
+        ActiveSectionSubtitle = LocalizationManager.Instance.Get("Main.VisibleItems", VisibleArticles.Count, VisibleArticles.Count(article => article.IsUnread));
         OnPropertyChanged(nameof(UnreadSectionBackground));
         OnPropertyChanged(nameof(AllArticlesSectionBackground));
         OnPropertyChanged(nameof(IsFavoritesFilterActive));
@@ -882,7 +917,18 @@ public sealed class MainViewModel : ObservableObject
     private void CleanupExpiredArticles()
     {
         var cutoff = DateTimeOffset.Now.AddDays(-_articleRetentionDays);
-        _allArticles.RemoveAll(article => !article.IsSaved && article.PublishedAt < cutoff);
+        var feedsWithCurrentArticles = _allArticles
+            .Where(article => article.PublishedAt >= cutoff)
+            .Select(article => article.FeedId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // Never leave a subscribed source empty solely because it currently exposes
+        // historical entries. As soon as that source publishes a current entry, its
+        // older unsaved articles return to the normal retention policy.
+        _allArticles.RemoveAll(article =>
+            !article.IsSaved &&
+            article.PublishedAt < cutoff &&
+            feedsWithCurrentArticles.Contains(article.FeedId));
     }
 
     private void ToggleSelectedRead()
@@ -1058,6 +1104,7 @@ public sealed class MainViewModel : ObservableObject
             UnreadSortOrder = _unreadSortOrder,
             GroupBy = _groupBy,
             Appearance = _appearance,
+            ApplicationLanguage = _applicationLanguage,
             DisplaySourceFavicons = _displaySourceFavicons,
             ShowAllArticlesList = _showAllArticlesList,
             ShowSavedList = _showSavedList,

@@ -16,6 +16,7 @@ public sealed class AppState
     public string UnreadSortOrder { get; set; } = "Newest first";
     public string GroupBy { get; set; } = "Date";
     public string Appearance { get; set; } = "Light";
+    public string ApplicationLanguage { get; set; } = "en";
     public bool DisplaySourceFavicons { get; set; } = true;
     public bool ShowAllArticlesList { get; set; } = true;
     public bool ShowSavedList { get; set; } = true;

@@ -1,4 +1,5 @@
 using System.Windows;
+using OpenRssReader.Localization;
 
 namespace OpenRssReader;
 
@@ -19,7 +20,7 @@ public partial class FolderEditorWindow : Window
     {
         if (string.IsNullOrWhiteSpace(FolderName))
         {
-            StatusText.Text = "Enter a folder name.";
+            StatusText.Text = LocalizationManager.Instance["Status.EnterFolderName"];
             return;
         }
 

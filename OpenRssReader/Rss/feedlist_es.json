@@ -1,0 +1,18 @@
+[
+  {
+    "Title": "El Pais | Portada",
+    "Link": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada"
+  },
+  {
+    "Title": "elDiario.es",
+    "Link": "https://www.eldiario.es/rss/"
+  },
+  {
+    "Title": "Europa Press | Portada",
+    "Link": "https://www.europapress.es/rss/rss.aspx"
+  },
+  {
+    "Title": "La Vanguardia | Portada",
+    "Link": "https://www.lavanguardia.com/rss/home.xml"
+  }
+]

@@ -1,0 +1,34 @@
+﻿[
+  {
+    "Title": "BBC | International",
+    "Link": "http://feeds.bbci.co.uk/news/world/rss.xml"
+  },
+  {
+    "Title": "BBC | Business",
+    "Link": "http://feeds.bbci.co.uk/news/business/rss.xml"
+  },
+  {
+    "Title": "BBC | Politics",
+    "Link": "http://feeds.bbci.co.uk/news/politics/rss.xml"
+  },
+  {
+    "Title": "BBC | Health",
+    "Link": "http://feeds.bbci.co.uk/news/health/rss.xml"
+  },
+  {
+    "Title": "BBC | Technology",
+    "Link": "http://feeds.bbci.co.uk/news/technology/rss.xml"
+  },
+  {
+    "Title": "BBC | Education",
+    "Link": "http://feeds.bbci.co.uk/news/education/rss.xml"
+  },
+  {
+    "Title": "BBC | Science & Environment",
+    "Link": "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"
+  },
+  {
+    "Title": "BBC | Entertainment & Arts",
+    "Link": "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml"
+  }
+]
