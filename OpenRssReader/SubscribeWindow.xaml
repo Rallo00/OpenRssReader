@@ -1,15 +1,69 @@
-﻿<Window x:Class="OpenRssReader.SubscribeWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Subscribe to feed" Width="540" Height="350" ResizeMode="NoResize">
-    <Grid Margin="5,5,5,5">
-        <StackPanel Orientation="Vertical" Margin="5,5,5,5">
-            <TextBlock Text="Subscribe to feed" Margin="0,0,0,5" FontWeight="Bold" FontSize="14" />
-            <TextBlock Text="Name shown in RSS Feeds:" Margin="0,20,0,0" />
-            <TextBox x:Name="FeedNameTextBox" Margin="0,5,0,0" />
-            <TextBlock Text="Feed address:" Margin="0,5,0,0" />
-            <TextBox x:Name="FeedAddressTextBox" Margin="0,5,0,0" />
-            <TextBlock Text="Parent folder:" Margin="0,5,0,0" />
-            <ComboBox x:Name="FolderComboBox" Height="28" Margin="0,5,0,0" />
-            <Button Margin="0,10,0,0" Content="Subscribe" Click="SearchButton_Click" HorizontalAlignment="Center" Width="520" Height="40" />
-            <TextBlock x:Name="StatusText" Margin="0,5,0,0" />
-        </StackPanel>
+<Window x:Class="OpenRssReader.SubscribeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:hc="clr-namespace:HandyControl.Controls;assembly=HandyControl"
+        xmlns:loc="clr-namespace:OpenRssReader.Localization"
+        Title="{loc:Loc Subscribe.Title}"
+        Width="540"
+        Height="510"
+        MinWidth="540"
+        MinHeight="510"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#F7F6F4"
+        Foreground="#444443">
+    <Grid Margin="10">
+        <TabControl x:Name="SubscribeTabControl">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="{loc:Loc Subscribe.Automatic}" />
+                </TabItem.Header>
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{loc:Loc Subscribe.SearchCatalog}" FontWeight="Bold" FontSize="14" />
+                    <hc:SearchBar x:Name="SearchTextBox" Grid.Row="1" Margin="0,8,0,10" Height="36" hc:InfoElement.Placeholder="{loc:Loc Subscribe.SearchFeed}" TextChanged="SearchTextBox_TextChanged" />
+                    <ListBox x:Name="AutomaticResultsListBox" Grid.Row="2" DisplayMemberPath="Title" BorderBrush="{DynamicResource SeparatorBrush}" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                    <ComboBox x:Name="AutomaticFolderComboBox" Grid.Row="3" Margin="0,10,0,0" Height="28" />
+                    <StackPanel Grid.Row="4" Margin="0,10,0,0">
+                        <Button Content="{loc:Loc Subscribe.AddSelected}" Click="AutomaticSubscribeButton_Click" Height="36" HorizontalAlignment="Stretch"/>
+                        <TextBlock x:Name="AutomaticStatusText" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="{loc:Loc Subscribe.Manual}" />
+                </TabItem.Header>
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{loc:Loc Subscribe.ManualFeed}" FontWeight="Bold" FontSize="14" />
+                    <TextBlock Grid.Row="1" Margin="0,16,0,0" Text="{loc:Loc Subscribe.Name}" />
+                    <TextBox x:Name="FeedNameTextBox" Grid.Row="2" Margin="0,5,0,0" />
+                    <TextBlock Grid.Row="3" Margin="0,10,0,0" Text="{loc:Loc Subscribe.Address}" />
+                    <TextBox x:Name="FeedAddressTextBox" Grid.Row="4" Margin="0,5,0,0" />
+                    <TextBlock Grid.Row="5" Margin="0,10,0,0" Text="{loc:Loc Subscribe.ParentFolder}" />
+                    <ComboBox x:Name="FolderComboBox" Grid.Row="6" Margin="0,5,0,0" Height="28" />
+                    <StackPanel Grid.Row="7" Margin="0,12,0,0">
+                        <Button Content="{loc:Loc Subscribe.Button}" Click="SearchButton_Click" Height="36" HorizontalAlignment="Stretch"/>
+                        <TextBlock x:Name="StatusText" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

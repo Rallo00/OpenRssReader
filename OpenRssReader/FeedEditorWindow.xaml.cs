@@ -1,6 +1,7 @@
 using System.Windows;
 using OpenRssReader.Models;
 using OpenRssReader.ViewModels;
+using OpenRssReader.Localization;
 
 namespace OpenRssReader;
 
@@ -24,7 +25,7 @@ public partial class FeedEditorWindow : Window
     {
         try
         {
-            StatusText.Text = "Saving feed...";
+            StatusText.Text = LocalizationManager.Instance["Status.SavingFeed"];
             await _viewModel.UpdateFeedAsync(_feed, FeedNameTextBox.Text, FeedAddressTextBox.Text, FolderComboBox.SelectedItem as string);
             DialogResult = true;
         }

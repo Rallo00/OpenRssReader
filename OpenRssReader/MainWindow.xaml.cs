@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using OpenRssReader.Models;
+using OpenRssReader.Localization;
 using OpenRssReader.ViewModels;
 
 namespace OpenRssReader;
@@ -85,7 +86,7 @@ public partial class MainWindow : Window
 
     private async void CreateFolderButton_Click(object sender, RoutedEventArgs e)
     {
-        var window = new FolderEditorWindow("Create folder") { Owner = this };
+        var window = new FolderEditorWindow(LocalizationManager.Instance["Dialog.CreateFolder"]) { Owner = this };
         if (window.ShowDialog() == true)
         {
             await _viewModel.CreateFolderAsync(window.FolderName);
@@ -115,7 +116,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var choice = MessageBox.Show($"Remove '{feed.Name}' and its saved articles?", "Remove feed", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        var choice = MessageBox.Show(LocalizationManager.Instance.Get("Dialog.RemoveFeedMessage", feed.Name), LocalizationManager.Instance["Dialog.RemoveFeed"], MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (choice == MessageBoxResult.Yes)
         {
             await _viewModel.DeleteFeedAsync(feed);
@@ -137,7 +138,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var window = new FolderEditorWindow("Edit folder", folder.Name) { Owner = this };
+        var window = new FolderEditorWindow(LocalizationManager.Instance["Dialog.EditFolder"], folder.Name) { Owner = this };
         if (window.ShowDialog() == true)
         {
             await _viewModel.RenameFolderAsync(folder.Name, window.FolderName);
@@ -151,7 +152,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var choice = MessageBox.Show($"Delete '{folder.Name}'? Its feeds will remain in RSS Feeds.", "Delete folder", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        var choice = MessageBox.Show(LocalizationManager.Instance.Get("Dialog.DeleteFolderMessage", folder.Name), LocalizationManager.Instance["Dialog.DeleteFolder"], MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (choice == MessageBoxResult.Yes)
         {
             await _viewModel.DeleteFolderAsync(folder.Name);

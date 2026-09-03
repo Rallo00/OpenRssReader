@@ -1,0 +1,167 @@
+[
+  {
+    "Title": "La Repubblica (su abbonamento)",
+    "Link": "http://www.repubblica.it/rss/homepage/rss2.0.xml?ref=RHFT"
+  },
+  {
+    "Title": "La Repubblica | Politica (su abbonamento)",
+    "Link": "http://www.repubblica.it/politica/rss"
+  },
+  {
+    "Title": "La Repubblica | Esteri (su abbonamento)",
+    "Link": "http://www.repubblica.it/esteri/rss"
+  },
+  {
+    "Title": "La Repubblica | Economia (su abbonamento)",
+    "Link": "http://www.repubblica.it/economia/rss"
+  },
+  {
+    "Title": "La Repubblica | Cronaca (su abbonamento)",
+    "Link": "http://www.repubblica.it/cronaca/rss"
+  },
+  {
+    "Title": "La Repubblica | Sport (su abbonamento)",
+    "Link": "http://www.repubblica.it/sport/rss"
+  },
+  {
+    "Title": "La Repubblica | Cultura (su abbonamento)",
+    "Link": "http://www.repubblica.it/cultura/rss"
+  },
+  {
+    "Title": "La Repubblica | Spettacolo (su abbonamento)",
+    "Link": "http://www.repubblica.it/spettacoli/rss"
+  },
+  {
+    "Title": "La Repubblica | Italian Tech (su abbonamento)",
+    "Link": "http://www.repubblica.it/tecnologia/rss"
+  },
+  {
+    "Title": "La Repubblica | Motori (su abbonamento)",
+    "Link": "http://www.repubblica.it/motori/rss"
+  },
+  {
+    "Title": "Adnkronos | Cronaca",
+    "Link": "https://www.adnkronos.com/cronaca/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Economia",
+    "Link": "https://www.adnkronos.com/economia/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Politica",
+    "Link": "https://www.adnkronos.com/politica/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Esteri",
+    "Link": "https://www.adnkronos.com/esteri/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Sport",
+    "Link": "https://www.adnkronos.com/sport/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Spettacoli",
+    "Link": "https://www.adnkronos.com/spettacoli/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Salute",
+    "Link": "https://www.adnkronos.com/salute/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Cultura",
+    "Link": "https://www.adnkronos.com/cultura/rss.xml"
+  },
+  {
+    "Title": "Adnkronos | Motori",
+    "Link": "https://www.adnkronos.com/motori/rss.xml"
+  },
+  {
+    "Title": "ANSA",
+    "Link": "https://www.ansa.it/sito/ansait_rss.xml"
+  },
+  {
+    "Title": "ANSA | Cultura",
+    "Link": "https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml"
+  },
+  {
+    "Title": "ANSA | Top News",
+    "Link": "https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml"
+  },
+  {
+    "Title": "Il Sole 24 Ore | Cultura",
+    "Link": "https://www.ilsole24ore.com/rss/cultura.xml"
+  },
+  {
+    "Title": "Il Sole 24 Ore | Finanza",
+    "Link": "https://www.ilsole24ore.com/rss/finanza.xml"
+  },
+  {
+    "Title": "Il Sole 24 Ore | Mondo",
+    "Link": "https://www.ilsole24ore.com/rss/mondo.xml"
+  },
+  {
+    "Title": "Il Sole 24 Ore | Tecnologia",
+    "Link": "https://www.ilsole24ore.com/rss/tecnologia.xml"
+  },
+  {
+    "Title": "La Gazzetta dello Sport",
+    "Link": "https://www.gazzetta.it/rss/home.xml"
+  },
+  {
+    "Title": "Libero",
+    "Link": "https://www.liberoquotidiano.it/rss.xml"
+  },
+  {
+    "Title": "Libero | Politica",
+    "Link": "https://www.liberoquotidiano.it/politica/rss.xml"
+  },
+  {
+    "Title": "Libero | Sport",
+    "Link": "https://www.liberoquotidiano.it/sport/rss.xml"
+  },
+  {
+    "Title": "Libero | Italia",
+    "Link": "https://www.liberoquotidiano.it/italia/rss.xml"
+  },
+  {
+    "Title": "Libero | Europa",
+    "Link": "https://www.liberoquotidiano.it/europa/rss.xml"
+  },
+  {
+    "Title": "Libero | Esteri",
+    "Link": "https://www.liberoquotidiano.it/esteri/rss.xml"
+  },
+  {
+    "Title": "Libero | Economia",
+    "Link": "https://www.liberoquotidiano.it/economia/rss.xml"
+  },
+  {
+    "Title": "Libero | Spettacolo",
+    "Link": "https://www.liberoquotidiano.it/spettacoli/rss.xml"
+  },
+  {
+    "Title": "Motosprint",
+    "Link": "https://www.motosprint.it/rss/home"
+  },
+  {
+    "Title": "Motosprint | MotoGP",
+    "Link": "https://www.motosprint.it/rss/motomondiale/moto-gp"
+  },
+  {
+    "Title": "Motosprint | Moto2",
+    "Link": "https://www.motosprint.it/rss/motomondiale/moto2"
+  },
+  {
+    "Title": "Motosprint | Moto3",
+    "Link": "https://www.motosprint.it/rss/motomondiale/moto3"
+  },
+  {
+    "Title": "Motosprint | Superbike",
+    "Link": "https://www.motosprint.it/rss/sbk/superbike"
+  },
+  {
+    "Title": "Motosprint | CIV",
+    "Link": "https://www.motosprint.it/rss/pista/civ"
+  }
+
+]

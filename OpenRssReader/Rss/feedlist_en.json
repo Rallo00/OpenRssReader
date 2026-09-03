@@ -1,0 +1,18 @@
+[
+  {
+    "Title": "BBC News | UK",
+    "Link": "https://feeds.bbci.co.uk/news/rss.xml?edition=uk"
+  },
+  {
+    "Title": "The Guardian | UK",
+    "Link": "https://www.theguardian.com/uk/rss"
+  },
+  {
+    "Title": "Sky News | UK",
+    "Link": "https://feeds.skynews.com/feeds/rss/uk.xml"
+  },
+  {
+    "Title": "The Independent | UK",
+    "Link": "https://www.independent.co.uk/news/uk/rss"
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "Title": "Deutsche Welle | Nachrichten",
+    "Link": "https://rss.dw.com/rdf/rss-de-all"
+  },
+  {
+    "Title": "tagesschau",
+    "Link": "https://www.tagesschau.de/xml/rss2/"
+  },
+  {
+    "Title": "Deutschlandfunk | Nachrichten",
+    "Link": "https://www.deutschlandfunk.de/nachrichten-100.rss"
+  },
+  {
+    "Title": "DIE ZEIT",
+    "Link": "https://newsfeed.zeit.de/index"
+  }
+]

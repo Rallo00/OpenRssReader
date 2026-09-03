@@ -1,0 +1,22 @@
+[
+  {
+    "Title": "France 24 | France",
+    "Link": "https://www.france24.com/fr/rss"
+  },
+  {
+    "Title": "Le Monde | A la une (sur abonnement)",
+    "Link": "https://www.lemonde.fr/rss/une.xml"
+  },
+  {
+    "Title": "RFI | France",
+    "Link": "https://www.rfi.fr/fr/rss"
+  },
+  {
+    "Title": "franceinfo | Actualites",
+    "Link": "https://www.franceinfo.fr/titres.rss"
+  },
+  {
+    "Title": "Le Figaro | Actualites",
+    "Link": "https://www.lefigaro.fr/rss/figaro_actualites.xml"
+  }
+]

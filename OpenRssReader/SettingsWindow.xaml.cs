@@ -10,6 +10,20 @@ namespace OpenRssReader;
 
 public partial class SettingsWindow : Window
 {
+    private static readonly IReadOnlyDictionary<string, string> ApplicationLanguageCodes = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["Albanian"] = "sq", ["Basque"] = "eu", ["Belarusian"] = "be", ["Bosnian"] = "bs",
+        ["Bulgarian"] = "bg", ["Catalan"] = "ca", ["Croatian"] = "hr", ["Czech"] = "cs",
+        ["Danish"] = "da", ["Dutch"] = "nl", ["English"] = "en", ["Estonian"] = "et",
+        ["Finnish"] = "fi", ["French"] = "fr", ["Galician"] = "gl", ["German"] = "de",
+        ["Greek"] = "el", ["Hungarian"] = "hu", ["Icelandic"] = "is", ["Irish"] = "ga",
+        ["Italian"] = "it", ["Latvian"] = "lv", ["Lithuanian"] = "lt", ["Luxembourgish"] = "lb",
+        ["Macedonian"] = "mk", ["Maltese"] = "mt", ["Norwegian"] = "no", ["Polish"] = "pl",
+        ["Portuguese"] = "pt", ["Romanian"] = "ro", ["Serbian"] = "sr", ["Slovak"] = "sk",
+        ["Slovenian"] = "sl", ["Spanish"] = "es", ["Swedish"] = "sv", ["Ukrainian"] = "uk",
+        ["Welsh"] = "cy"
+    };
+
     private static readonly IReadOnlyList<string> WorldLanguages = CultureInfo
         .GetCultures(CultureTypes.NeutralCultures)
         .Select(culture => culture.EnglishName)
@@ -49,6 +63,7 @@ public partial class SettingsWindow : Window
         SelectComboBoxItem(UnreadSortComboBox, _viewModel.UnreadSortOrder);
         SelectComboBoxItem(GroupByComboBox, _viewModel.GroupBy);
         SelectComboBoxItem(ThemeComboBox, _viewModel.Appearance);
+        SelectApplicationLanguage(_viewModel.ApplicationLanguage);
         DisplaySourceFaviconsCheckBox.IsChecked = _viewModel.DisplaySourceFavicons;
         ShowAllArticlesListCheckBox.IsChecked = _viewModel.ShowAllArticlesList;
         ShowSavedListCheckBox.IsChecked = _viewModel.ShowSavedList;
@@ -163,7 +178,8 @@ public partial class SettingsWindow : Window
                 DisplaySourceFaviconsCheckBox.IsChecked == true,
                 ShowAllArticlesListCheckBox.IsChecked == true,
                 ShowSavedListCheckBox.IsChecked == true,
-                ShowUnreadListCheckBox.IsChecked == true);
+                ShowUnreadListCheckBox.IsChecked == true,
+                SelectedApplicationLanguageCode());
             GeneralStatusText.Text = "Preferences saved.";
             DialogResult = true;
         }
@@ -176,10 +192,30 @@ public partial class SettingsWindow : Window
     private static void SelectComboBoxItem(ComboBox comboBox, string text)
     {
         comboBox.SelectedIndex = Enumerable.Range(0, comboBox.Items.Count)
-            .FirstOrDefault(index => string.Equals(((ComboBoxItem)comboBox.Items[index]).Content?.ToString(), text, StringComparison.Ordinal));
+            .FirstOrDefault(index =>
+            {
+                var item = (ComboBoxItem)comboBox.Items[index];
+                return string.Equals(item.Tag?.ToString() ?? item.Content?.ToString(), text, StringComparison.Ordinal);
+            });
     }
 
-    private static string SelectedText(ComboBox comboBox) => (comboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
+    private static string SelectedText(ComboBox comboBox)
+    {
+        var item = comboBox.SelectedItem as ComboBoxItem;
+        return item?.Tag?.ToString() ?? item?.Content?.ToString() ?? string.Empty;
+    }
+
+    private void SelectApplicationLanguage(string languageCode)
+    {
+        var languageName = ApplicationLanguageCodes.FirstOrDefault(pair => string.Equals(pair.Value, languageCode, StringComparison.OrdinalIgnoreCase)).Key;
+        SelectComboBoxItem(ApplicationLanguageComboBox, string.IsNullOrEmpty(languageName) ? "English" : languageName);
+    }
+
+    private string SelectedApplicationLanguageCode()
+    {
+        var languageName = SelectedText(ApplicationLanguageComboBox);
+        return ApplicationLanguageCodes.TryGetValue(languageName, out var languageCode) ? languageCode : "en";
+    }
 
     private async void ConnectFeedlyButton_Click(object sender, RoutedEventArgs e)
     {
