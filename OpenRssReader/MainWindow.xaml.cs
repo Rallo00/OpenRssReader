@@ -131,6 +131,22 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void MarkFolderAsReadMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as MenuItem)?.CommandParameter is FeedGroup folder && !folder.IsRoot)
+        {
+            await _viewModel.MarkFolderAsReadAsync(folder.Name);
+        }
+    }
+
+    private void FolderHeader_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is FeedGroup folder && !folder.IsRoot)
+        {
+            folder.IsExpanded = !folder.IsExpanded;
+        }
+    }
+
     private async void EditFolderMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as MenuItem)?.CommandParameter is not FeedGroup folder || folder.IsRoot)

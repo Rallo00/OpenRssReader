@@ -185,22 +185,23 @@
                         <Style.Triggers><DataTrigger Binding="{Binding IsRoot}" Value="True"><Setter Property="Margin" Value="0" /></DataTrigger></Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <DockPanel Margin="0,0,0,10">
+                <DockPanel Margin="0,0,0,10" MouseLeftButtonUp="FolderHeader_MouseLeftButtonUp" Cursor="Hand">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel"><Style.Triggers><DataTrigger Binding="{Binding IsRoot}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style>
                     </DockPanel.Style>
                     <DockPanel.ContextMenu>
                         <ContextMenu Style="{StaticResource ReaderContextMenuStyle}">
                             <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Edit folder" Click="EditFolderMenuItem_Click" CommandParameter="{Binding}" />
+                            <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.MarkAllAsRead}" Click="MarkFolderAsReadMenuItem_Click" CommandParameter="{Binding}" />
                             <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Delete folder" Click="DeleteFolderMenuItem_Click" CommandParameter="{Binding}" />
                         </ContextMenu>
                     </DockPanel.ContextMenu>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center"><Path Data="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" Width="17" Height="17" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Style="{StaticResource SidebarSectionTitleTextStyle}" Text="{Binding Name}" Margin="0" VerticalAlignment="Center" /></StackPanel>
-                    <TextBlock Text="⌄" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" DockPanel.Dock="Right" />
+                    <TextBlock Text="{Binding ExpansionGlyph}" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" DockPanel.Dock="Right" />
                 </DockPanel>
                 <ItemsControl ItemsSource="{Binding Feeds}" Margin="16,0,0,0">
                     <ItemsControl.Style>
-                        <Style TargetType="ItemsControl"><Style.Triggers><DataTrigger Binding="{Binding IsRoot}" Value="True"><Setter Property="Margin" Value="0" /></DataTrigger></Style.Triggers></Style>
+                        <Style TargetType="ItemsControl"><Style.Triggers><DataTrigger Binding="{Binding IsRoot}" Value="True"><Setter Property="Margin" Value="0" /></DataTrigger><DataTrigger Binding="{Binding IsExpanded}" Value="False"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style>
                     </ItemsControl.Style>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:FeedSubscription}">

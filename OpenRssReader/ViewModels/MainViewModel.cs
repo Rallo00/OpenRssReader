@@ -257,6 +257,7 @@ public sealed class MainViewModel : ObservableObject
         CleanupExpiredArticles();
         RefreshVisibleArticles();
         await PersistAsync();
+        await RefreshFeedsAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -550,6 +551,29 @@ public sealed class MainViewModel : ObservableObject
     {
         var changed = false;
         foreach (var article in _allArticles.Where(article => article.FeedId == feed.Id && article.IsUnread))
+        {
+            article.IsUnread = false;
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return;
+        }
+
+        RecalculateUnreadCounts();
+        RefreshVisibleArticles();
+        await PersistAsync();
+    }
+
+    public async Task MarkFolderAsReadAsync(string folderName)
+    {
+        var feedIds = _allFeeds
+            .Where(feed => string.Equals(feed.GroupName, folderName, StringComparison.OrdinalIgnoreCase))
+            .Select(feed => feed.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var changed = false;
+        foreach (var article in _allArticles.Where(article => feedIds.Contains(article.FeedId) && article.IsUnread))
         {
             article.IsUnread = false;
             changed = true;

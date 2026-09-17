@@ -4,6 +4,7 @@
   "Main.RefreshFeeds": "Päivitä rehut",
   "Main.SubscribeToFeed": "Tilaa rehu",
   "Main.CreateFolder": "Luo kansio",
+  "Context.MarkAllAsRead": "Merkitse kaikki luetuiksi",
   "Main.RssFeeds": "RSS Rehut",
   "Main.AllArticles": "Kaikki artikkelit",
   "Main.Unread": "Ei lue",
