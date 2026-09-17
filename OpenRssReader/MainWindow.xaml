@@ -191,9 +191,9 @@
                     </DockPanel.Style>
                     <DockPanel.ContextMenu>
                         <ContextMenu Style="{StaticResource ReaderContextMenuStyle}">
-                            <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Edit folder" Click="EditFolderMenuItem_Click" CommandParameter="{Binding}" />
+                            <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.EditFolder}" Click="EditFolderMenuItem_Click" CommandParameter="{Binding}" />
                             <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.MarkAllAsRead}" Click="MarkFolderAsReadMenuItem_Click" CommandParameter="{Binding}" />
-                            <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Delete folder" Click="DeleteFolderMenuItem_Click" CommandParameter="{Binding}" />
+                            <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.DeleteFolder}" Click="DeleteFolderMenuItem_Click" CommandParameter="{Binding}" />
                         </ContextMenu>
                     </DockPanel.ContextMenu>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center"><Path Data="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" Stroke="{DynamicResource IconBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" Width="17" Height="17" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" /><TextBlock Style="{StaticResource SidebarSectionTitleTextStyle}" Text="{Binding Name}" Margin="0" VerticalAlignment="Center" /></StackPanel>
@@ -208,9 +208,9 @@
                             <Border Style="{StaticResource SoftCardBorderStyle}" MouseLeftButtonUp="FeedItem_MouseLeftButtonUp" Cursor="Hand">
                                 <Border.ContextMenu>
                                     <ContextMenu Style="{StaticResource ReaderContextMenuStyle}">
-                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Edit feed" Click="EditFeedMenuItem_Click" CommandParameter="{Binding}" />
-                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Mark all as read" Click="MarkFeedAsReadMenuItem_Click" CommandParameter="{Binding}" />
-                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="Delete feed" Click="DeleteFeedMenuItem_Click" CommandParameter="{Binding}" />
+                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.EditFeed}" Click="EditFeedMenuItem_Click" CommandParameter="{Binding}" />
+                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.MarkAllAsRead}" Click="MarkFeedAsReadMenuItem_Click" CommandParameter="{Binding}" />
+                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.DeleteFeed}" Click="DeleteFeedMenuItem_Click" CommandParameter="{Binding}" />
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <Grid>
