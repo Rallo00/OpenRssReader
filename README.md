@@ -4,6 +4,7 @@ Open RSS Reader is a free RSS reader for Windows.
 This project has been built with the support of AI.
 
 ## Features
+* NO INSTALLATION REQUIRED (I like to keep things clean!)
 * Multiple languages available;
 * Organize feeds into folders;
 * Light, Dark, and System themes;
