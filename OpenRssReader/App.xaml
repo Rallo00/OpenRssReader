@@ -49,7 +49,6 @@
         <SolidColorBrush x:Key="PlaceholderTextBrush" Color="#938B82" />
         <SolidColorBrush x:Key="ErrorTextBrush" Color="#9A5A43" />
         <SolidColorBrush x:Key="ThumbnailBrush" Color="#E8E0D5" />
-        <SolidColorBrush x:Key="FeedlyActionBrush" Color="#3F6F8C" />
         <SolidColorBrush x:Key="WhiteBrush" Color="#FFFFFF" />
         <Style TargetType="ComboBox">
             <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}" />

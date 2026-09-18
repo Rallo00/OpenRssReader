@@ -40,7 +40,9 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _viewModel = viewModel;
         _isInitializing = true;
-        FeedlyTokenTextBox.Text = _viewModel.FeedlyAccessToken;
+        FreshRssServerUrlTextBox.Text = _viewModel.FreshRssServerUrl;
+        FreshRssUsernameTextBox.Text = _viewModel.FreshRssUsername;
+        FreshRssPasswordBox.Password = _viewModel.FreshRssPassword;
         ArticleRetentionDaysInput.Text = _viewModel.ArticleRetentionDays.ToString();
         AutoRefreshIntervalInput.Text = _viewModel.AutoRefreshIntervalMinutes.ToString();
         MarkAsReadDelayInput.Text = _viewModel.MarkAsReadDelaySeconds.ToString();
@@ -68,6 +70,7 @@ public partial class SettingsWindow : Window
         ShowAllArticlesListCheckBox.IsChecked = _viewModel.ShowAllArticlesList;
         ShowSavedListCheckBox.IsChecked = _viewModel.ShowSavedList;
         ShowUnreadListCheckBox.IsChecked = _viewModel.ShowUnreadList;
+        DisplayPodcastListCheckbox.IsChecked = _viewModel.ShowPodcastList;
         _isInitializing = false;
     }
 
@@ -179,6 +182,7 @@ public partial class SettingsWindow : Window
                 ShowAllArticlesListCheckBox.IsChecked == true,
                 ShowSavedListCheckBox.IsChecked == true,
                 ShowUnreadListCheckBox.IsChecked == true,
+                DisplayPodcastListCheckbox.IsChecked == true,
                 SelectedApplicationLanguageCode());
             GeneralStatusText.Text = "Preferences saved.";
             DialogResult = true;
@@ -217,31 +221,17 @@ public partial class SettingsWindow : Window
         return ApplicationLanguageCodes.TryGetValue(languageName, out var languageCode) ? languageCode : "en";
     }
 
-    private async void ConnectFeedlyButton_Click(object sender, RoutedEventArgs e)
+    private async void SaveFreshRssButton_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            StatusText.Text = "Connecting to Feedly...";
-            await _viewModel.ConnectFeedlyAsync(FeedlyTokenTextBox.Text);
-            StatusText.Text = "Feedly connected. You can now synchronize your library.";
+            FreshRssStatusText.Text = "Saving FreshRSS settings...";
+            await _viewModel.SetFreshRssConfigurationAsync(FreshRssServerUrlTextBox.Text, FreshRssUsernameTextBox.Text, FreshRssPasswordBox.Password);
+            FreshRssStatusText.Text = "FreshRSS settings saved.";
         }
         catch (Exception exception)
         {
-            StatusText.Text = $"Connection failed: {exception.Message}";
-        }
-    }
-
-    private async void SyncFeedlyButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            StatusText.Text = "Synchronizing Feedly feeds...";
-            var imported = await _viewModel.SyncFeedlyAsync();
-            StatusText.Text = $"Synchronization complete: {imported} feeds added.";
-        }
-        catch (Exception exception)
-        {
-            StatusText.Text = $"Synchronization failed: {exception.Message}";
+            FreshRssStatusText.Text = exception.Message;
         }
     }
 

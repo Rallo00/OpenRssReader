@@ -30,8 +30,11 @@ public sealed class MainViewModel : ObservableObject
     private string _activeSectionSubtitle = "Loading articles...";
     private bool _showFavoritesOnly;
     private bool _showSavedOnly;
+    private bool _showPodcastsOnly;
     private bool _showUnreadOnly = true;
-    private string _feedlyAccessToken = string.Empty;
+    private string _freshRssServerUrl = string.Empty;
+    private string _freshRssUsername = string.Empty;
+    private string _freshRssPassword = string.Empty;
     private int _articleRetentionDays = 30;
     private string _readingFontFamily = "Segoe UI";
     private string _readingTitleFontFamily = "Segoe UI";
@@ -51,6 +54,7 @@ public sealed class MainViewModel : ObservableObject
     private bool _showAllArticlesList = true;
     private bool _showSavedList = true;
     private bool _showUnreadList = true;
+    private bool _showPodcastList = true;
     private bool _isTextToSpeechActive;
     private bool _isTextToSpeechPaused;
     private int _textToSpeechVolume = 80;
@@ -70,6 +74,7 @@ public sealed class MainViewModel : ObservableObject
             _showUnreadOnly = false;
             _showFavoritesOnly = false;
             _showSavedOnly = false;
+            _showPodcastsOnly = false;
             _selectedFeedId = null;
             RefreshVisibleArticles();
         });
@@ -78,6 +83,7 @@ public sealed class MainViewModel : ObservableObject
             _showUnreadOnly = true;
             _showFavoritesOnly = false;
             _showSavedOnly = false;
+            _showPodcastsOnly = false;
             _selectedFeedId = null;
             RefreshVisibleArticles();
         });
@@ -88,6 +94,7 @@ public sealed class MainViewModel : ObservableObject
             {
                 _showUnreadOnly = false;
                 _showSavedOnly = false;
+                _showPodcastsOnly = false;
             }
             RefreshVisibleArticles();
         });
@@ -96,6 +103,16 @@ public sealed class MainViewModel : ObservableObject
             _showSavedOnly = true;
             _showUnreadOnly = false;
             _showFavoritesOnly = false;
+            _showPodcastsOnly = false;
+            _selectedFeedId = null;
+            RefreshVisibleArticles();
+        });
+        SelectPodcastsCommand = new RelayCommand(() =>
+        {
+            _showPodcastsOnly = true;
+            _showUnreadOnly = false;
+            _showFavoritesOnly = false;
+            _showSavedOnly = false;
             _selectedFeedId = null;
             RefreshVisibleArticles();
         });
@@ -118,6 +135,7 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand SelectUnreadCommand { get; }
     public RelayCommand ToggleFavoritesFilterCommand { get; }
     public RelayCommand SelectSavedCommand { get; }
+    public RelayCommand SelectPodcastsCommand { get; }
     public RelayCommand ToggleSelectedFavoriteCommand { get; }
     public RelayCommand ToggleSelectedSavedCommand { get; }
     public RelayCommand ToggleSelectedReadCommand { get; }
@@ -158,6 +176,8 @@ public sealed class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(HasSelectedArticle));
             OnPropertyChanged(nameof(SelectedArticleHtml));
             OnPropertyChanged(nameof(SelectedArticleDisplayTitle));
+            OnPropertyChanged(nameof(IsSelectedPodcast));
+            OnPropertyChanged(nameof(SelectedPodcastAudioUrl));
             OnPropertyChanged(nameof(TranslationToolTip));
             ToggleSelectedFavoriteCommand.RaiseCanExecuteChanged();
             ToggleSelectedSavedCommand.RaiseCanExecuteChanged();
@@ -182,6 +202,8 @@ public sealed class MainViewModel : ObservableObject
         _readingFontSize,
         _appearance == "Dark");
     public string SelectedArticleDisplayTitle => _translatedTitle ?? SelectedArticle?.Title ?? string.Empty;
+    public bool IsSelectedPodcast => SelectedArticle?.IsPodcast == true;
+    public string SelectedPodcastAudioUrl => SelectedArticle?.AudioUrl ?? string.Empty;
     public string LastRefreshLabel => _lastRefreshAt is null
         ? LocalizationManager.Instance["Main.NotRefreshedYet"]
         : LocalizationManager.Instance.Get("Main.UpdatedOn", _lastRefreshAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm"));
@@ -205,6 +227,9 @@ public sealed class MainViewModel : ObservableObject
     public Brush AllArticlesSectionBackground => !_showUnreadOnly && !_showFavoritesOnly ? BrushFactory.CreateBrush("#E7DED3") : BrushFactory.CreateBrush("#EFE8DE");
     public bool IsFavoritesFilterActive => _showFavoritesOnly;
     public bool IsSavedFilterActive => _showSavedOnly;
+    public int TotalPodcastCount => _allArticles.Count(article => article.IsPodcast);
+    public bool HasPodcastEpisodes => TotalPodcastCount > 0;
+    public bool IsPodcastListVisible => _showPodcastList && HasPodcastEpisodes;
     public int ArticleRetentionDays => _articleRetentionDays;
     public string ReadingFontFamily => _readingFontFamily;
     public string ReadingTitleFontFamily => _readingTitleFontFamily;
@@ -219,6 +244,7 @@ public sealed class MainViewModel : ObservableObject
     public bool ShowAllArticlesList => _showAllArticlesList;
     public bool ShowSavedList => _showSavedList;
     public bool ShowUnreadList => _showUnreadList;
+    public bool ShowPodcastList => _showPodcastList;
     public string UnreadSortOrder => _unreadSortOrder;
     public string GroupBy => _groupBy;
     public string Appearance => _appearance;
@@ -256,6 +282,19 @@ public sealed class MainViewModel : ObservableObject
         LoadState(state);
         CleanupExpiredArticles();
         RefreshVisibleArticles();
+        if (!string.IsNullOrWhiteSpace(_freshRssServerUrl) &&
+            !string.IsNullOrWhiteSpace(_freshRssUsername) &&
+            !string.IsNullOrWhiteSpace(_freshRssPassword))
+        {
+            try
+            {
+                await SyncFreshRssAsync();
+            }
+            catch
+            {
+                // Preserve the locally cached library when FreshRSS is temporarily unavailable.
+            }
+        }
         await PersistAsync();
         await RefreshFeedsAsync();
     }
@@ -283,7 +322,9 @@ public sealed class MainViewModel : ObservableObject
 
     private void LoadState(AppState state)
     {
-        _feedlyAccessToken = state.FeedlyAccessToken;
+        _freshRssServerUrl = state.FreshRssServerUrl ?? string.Empty;
+        _freshRssUsername = state.FreshRssUsername ?? string.Empty;
+        _freshRssPassword = state.FreshRssPassword ?? string.Empty;
         _articleRetentionDays = Math.Clamp(state.ArticleRetentionDays <= 0 ? 30 : state.ArticleRetentionDays, 1, 3650);
         _autoRefreshIntervalMinutes = Math.Clamp(state.AutoRefreshIntervalMinutes <= 0 ? 30 : state.AutoRefreshIntervalMinutes, 1, 1440);
         _markAsReadDelaySeconds = Math.Clamp(state.MarkAsReadDelaySeconds <= 0 ? 3 : state.MarkAsReadDelaySeconds, 1, 3600);
@@ -307,6 +348,7 @@ public sealed class MainViewModel : ObservableObject
         _showAllArticlesList = state.ShowAllArticlesList;
         _showSavedList = state.ShowSavedList;
         _showUnreadList = state.ShowUnreadList;
+        _showPodcastList = state.ShowPodcastList;
         ApplyGrouping();
         _folders.Clear();
         _folders.AddRange((state.Folders ?? [])
@@ -324,7 +366,9 @@ public sealed class MainViewModel : ObservableObject
                 GroupName = feedState.GroupName,
                 AccentHex = feedState.AccentHex,
                 AccentBrush = BrushFactory.CreateBrush(feedState.AccentHex),
-                FaviconUrl = string.IsNullOrWhiteSpace(feedState.FaviconUrl) ? CreateFaviconUrl(feedState.Url) : feedState.FaviconUrl
+                FaviconUrl = string.IsNullOrWhiteSpace(feedState.FaviconUrl) ? CreateFaviconUrl(feedState.Url) : feedState.FaviconUrl,
+                IsManagedByFreshRss = feedState.IsManagedByFreshRss,
+                FreshRssFeedId = feedState.FreshRssFeedId
             });
         }
 
@@ -353,12 +397,14 @@ public sealed class MainViewModel : ObservableObject
                 ThumbnailLabel = articleState.ThumbnailLabel,
                 ThumbnailUrl = string.IsNullOrWhiteSpace(articleState.ThumbnailUrl) ? HtmlRenderer.ExtractImageUrl(articleState.HtmlContent) : articleState.ThumbnailUrl,
                 FaviconUrl = string.IsNullOrWhiteSpace(articleState.FaviconUrl) ? CreateFaviconUrl(articleState.Link) : articleState.FaviconUrl,
+                AudioUrl = articleState.AudioUrl,
                 ThumbnailBrush = BrushFactory.CreateBrush(articleState.AccentHex),
                 HeroBrush = BrushFactory.CreateHeroBrush(articleState.AccentHex),
-                RequiresArticleContentFetch = IsSummaryOnlyDocument(articleState.HtmlContent, articleState.Summary),
+                RequiresArticleContentFetch = string.IsNullOrWhiteSpace(articleState.AudioUrl) && IsSummaryOnlyDocument(articleState.HtmlContent, articleState.Summary),
                 IsFavorite = articleState.IsFavorite,
                 IsSaved = articleState.IsSaved,
-                IsUnread = articleState.IsUnread
+                IsUnread = articleState.IsUnread,
+                FreshRssEntryId = articleState.FreshRssEntryId
             });
         }
 
@@ -378,7 +424,16 @@ public sealed class MainViewModel : ObservableObject
 
         try
         {
-            await RefreshAllAsync();
+            if (!string.IsNullOrWhiteSpace(_freshRssServerUrl) &&
+                !string.IsNullOrWhiteSpace(_freshRssUsername) &&
+                !string.IsNullOrWhiteSpace(_freshRssPassword))
+            {
+                await SyncFreshRssAsync();
+            }
+            else
+            {
+                await RefreshAllAsync();
+            }
         }
         finally
         {
@@ -408,6 +463,11 @@ public sealed class MainViewModel : ObservableObject
                         {
                             existing.PublishedAt = item.PublishedAt;
                             existing.HasPublicationDate = true;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(item.AudioUrl))
+                        {
+                            existing.AudioUrl = item.AudioUrl;
                         }
 
                         existing.RequiresArticleContentFetch |= item.RequiresArticleContentFetch;
@@ -450,6 +510,11 @@ public sealed class MainViewModel : ObservableObject
 
     public async Task UpdateFeedAsync(FeedSubscription feed, string displayName, string address, string? folderName)
     {
+        if (feed.IsManagedByFreshRss)
+        {
+            throw new InvalidOperationException("FreshRSS feeds can only be managed from FreshRSS.");
+        }
+
         if (string.IsNullOrWhiteSpace(displayName))
         {
             throw new InvalidOperationException("Enter a display name for the feed.");
@@ -539,6 +604,11 @@ public sealed class MainViewModel : ObservableObject
 
     public async Task DeleteFeedAsync(FeedSubscription feed)
     {
+        if (feed.IsManagedByFreshRss)
+        {
+            throw new InvalidOperationException("FreshRSS feeds can only be managed from FreshRSS.");
+        }
+
         _allFeeds.Remove(feed);
         _allArticles.RemoveAll(article => article.FeedId == feed.Id);
         RebuildFeedGroups();
@@ -549,14 +619,13 @@ public sealed class MainViewModel : ObservableObject
 
     public async Task MarkFeedAsReadAsync(FeedSubscription feed)
     {
-        var changed = false;
-        foreach (var article in _allArticles.Where(article => article.FeedId == feed.Id && article.IsUnread))
+        var changedArticles = _allArticles.Where(article => article.FeedId == feed.Id && article.IsUnread).ToList();
+        foreach (var article in changedArticles)
         {
             article.IsUnread = false;
-            changed = true;
         }
 
-        if (!changed)
+        if (changedArticles.Count == 0)
         {
             return;
         }
@@ -564,6 +633,7 @@ public sealed class MainViewModel : ObservableObject
         RecalculateUnreadCounts();
         RefreshVisibleArticles();
         await PersistAsync();
+        await SyncReadStatesToFreshRssAsync(changedArticles);
     }
 
     public async Task MarkFolderAsReadAsync(string folderName)
@@ -572,14 +642,13 @@ public sealed class MainViewModel : ObservableObject
             .Where(feed => string.Equals(feed.GroupName, folderName, StringComparison.OrdinalIgnoreCase))
             .Select(feed => feed.Id)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var changed = false;
-        foreach (var article in _allArticles.Where(article => feedIds.Contains(article.FeedId) && article.IsUnread))
+        var changedArticles = _allArticles.Where(article => feedIds.Contains(article.FeedId) && article.IsUnread).ToList();
+        foreach (var article in changedArticles)
         {
             article.IsUnread = false;
-            changed = true;
         }
 
-        if (!changed)
+        if (changedArticles.Count == 0)
         {
             return;
         }
@@ -587,9 +656,12 @@ public sealed class MainViewModel : ObservableObject
         RecalculateUnreadCounts();
         RefreshVisibleArticles();
         await PersistAsync();
+        await SyncReadStatesToFreshRssAsync(changedArticles);
     }
 
-    public string FeedlyAccessToken => _feedlyAccessToken;
+    public string FreshRssServerUrl => _freshRssServerUrl;
+    public string FreshRssUsername => _freshRssUsername;
+    public string FreshRssPassword => _freshRssPassword;
 
     public async Task SetArticleRetentionDaysAsync(int days)
     {
@@ -667,7 +739,7 @@ public sealed class MainViewModel : ObservableObject
         await PersistAsync();
     }
 
-    public async Task SetGeneralPreferencesAsync(string unreadSortOrder, string groupBy, string appearance, int autoRefreshIntervalMinutes, int markAsReadDelaySeconds, bool displaySourceFavicons, bool showAllArticlesList, bool showSavedList, bool showUnreadList, string applicationLanguage)
+    public async Task SetGeneralPreferencesAsync(string unreadSortOrder, string groupBy, string appearance, int autoRefreshIntervalMinutes, int markAsReadDelaySeconds, bool displaySourceFavicons, bool showAllArticlesList, bool showSavedList, bool showUnreadList, bool showPodcastList, string applicationLanguage)
     {
         if (autoRefreshIntervalMinutes is < 1 or > 1440)
         {
@@ -692,12 +764,15 @@ public sealed class MainViewModel : ObservableObject
         _showAllArticlesList = showAllArticlesList;
         _showSavedList = showSavedList;
         _showUnreadList = showUnreadList;
+        _showPodcastList = showPodcastList;
         ApplyGrouping();
         RefreshVisibleArticles();
         OnPropertyChanged(nameof(DisplaySourceFavicons));
         OnPropertyChanged(nameof(ShowAllArticlesList));
         OnPropertyChanged(nameof(ShowSavedList));
         OnPropertyChanged(nameof(ShowUnreadList));
+        OnPropertyChanged(nameof(ShowPodcastList));
+        OnPropertyChanged(nameof(IsPodcastListVisible));
         OnPropertyChanged(nameof(Appearance));
         OnPropertyChanged(nameof(ApplicationLanguage));
         OnPropertyChanged(nameof(AutoRefreshIntervalMinutes));
@@ -706,16 +781,198 @@ public sealed class MainViewModel : ObservableObject
         await PersistAsync();
     }
 
-    public async Task ConnectFeedlyAsync(string accessToken)
+    public async Task SetFreshRssConfigurationAsync(string serverUrl, string username, string password)
     {
-        var profile = await FeedlyService.VerifyAsync(accessToken);
-        _feedlyAccessToken = accessToken.Trim();
+        if (!Uri.TryCreate(serverUrl.Trim(), UriKind.Absolute, out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new InvalidOperationException("Enter a valid FreshRSS server URL.");
+        }
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            throw new InvalidOperationException("Enter FreshRSS username and password.");
+        }
+
+        _freshRssServerUrl = serverUrl.Trim().TrimEnd('/');
+        _freshRssUsername = username.Trim();
+        _freshRssPassword = password.Trim();
+        OnPropertyChanged(nameof(FreshRssServerUrl));
+        OnPropertyChanged(nameof(FreshRssUsername));
+        OnPropertyChanged(nameof(FreshRssPassword));
         await PersistAsync();
+        await SyncFreshRssAsync();
+    }
+
+    public async Task<int> SyncFreshRssAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_freshRssServerUrl) || string.IsNullOrWhiteSpace(_freshRssUsername) || string.IsNullOrWhiteSpace(_freshRssPassword))
+        {
+            throw new InvalidOperationException("Enter FreshRSS server URL, username and password first.");
+        }
+
+        var library = await FreshRssService.GetLibraryAsync(_freshRssServerUrl, _freshRssUsername, _freshRssPassword);
+        var groupNames = library.Groups.ToDictionary(group => group.Id, group => group.Title, StringComparer.Ordinal);
+        var remoteIds = library.Feeds.Select(feed => feed.Id).ToHashSet(StringComparer.Ordinal);
+        var removedFeeds = _allFeeds.Where(feed => feed.IsManagedByFreshRss && !remoteIds.Contains(feed.FreshRssFeedId)).ToList();
+        foreach (var feed in removedFeeds)
+        {
+            _allFeeds.Remove(feed);
+            _allArticles.RemoveAll(article => article.FeedId == feed.Id);
+        }
+
+        foreach (var remoteFeed in library.Feeds)
+        {
+            var groupName = groupNames.GetValueOrDefault(remoteFeed.GroupId, string.Empty);
+            var existing = _allFeeds.FirstOrDefault(feed => feed.IsManagedByFreshRss && feed.FreshRssFeedId == remoteFeed.Id);
+            if (existing is not null)
+            {
+                existing.Name = remoteFeed.Title;
+                existing.Url = remoteFeed.Url;
+                existing.GroupName = groupName;
+                continue;
+            }
+
+            _allFeeds.Add(new FeedSubscription
+            {
+                Id = $"freshrss:{remoteFeed.Id}",
+                FreshRssFeedId = remoteFeed.Id,
+                IsManagedByFreshRss = true,
+                Name = remoteFeed.Title,
+                Url = remoteFeed.Url,
+                GroupName = groupName,
+                AccentHex = "#5A8FD8",
+                AccentBrush = BrushFactory.CreateBrush("#5A8FD8"),
+                FaviconUrl = CreateFaviconUrl(remoteFeed.Url)
+            });
+        }
+
+        foreach (var groupName in groupNames.Values.Where(name => !string.IsNullOrWhiteSpace(name)))
+        {
+            if (!_folders.Contains(groupName, StringComparer.OrdinalIgnoreCase))
+            {
+                _folders.Add(groupName);
+            }
+        }
+
+        RebuildFeedGroups();
+        await RefreshAllAsync();
+        await SynchronizeFreshRssReadStatesFromServerAsync();
+        return library.Feeds.Count;
+    }
+
+    private async Task SynchronizeFreshRssReadStatesFromServerAsync()
+    {
+        var freshRssFeedIds = _allFeeds
+            .Where(feed => feed.IsManagedByFreshRss)
+            .Select(feed => feed.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (freshRssFeedIds.Count == 0)
+        {
+            return;
+        }
+
+        var states = await FreshRssService.GetArticleStatesAsync(_freshRssServerUrl, _freshRssUsername, _freshRssPassword);
+        var statesByLink = states
+            .Select(state => (State: state, Link: NormalizeArticleLink(state.Link)))
+            .Where(item => !string.IsNullOrEmpty(item.Link))
+            .GroupBy(item => item.Link!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First().State, StringComparer.OrdinalIgnoreCase);
+
+        var changed = false;
+        foreach (var article in _allArticles.Where(article => freshRssFeedIds.Contains(article.FeedId)))
+        {
+            var link = NormalizeArticleLink(article.Link);
+            if (link is null || !statesByLink.TryGetValue(link, out var remoteState))
+            {
+                continue;
+            }
+
+            article.FreshRssEntryId = remoteState.EntryId;
+            if (article.IsUnread != remoteState.IsUnread)
+            {
+                article.IsUnread = remoteState.IsUnread;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            RecalculateUnreadCounts();
+            RefreshVisibleArticles();
+        }
+
+        await PersistAsync();
+    }
+
+    private async Task SyncReadStatesToFreshRssAsync(IEnumerable<ArticleItem> articles)
+    {
+        if (string.IsNullOrWhiteSpace(_freshRssServerUrl) ||
+            string.IsNullOrWhiteSpace(_freshRssUsername) ||
+            string.IsNullOrWhiteSpace(_freshRssPassword))
+        {
+            return;
+        }
+
+        var freshRssFeedIds = _allFeeds
+            .Where(feed => feed.IsManagedByFreshRss)
+            .Select(feed => feed.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var candidates = articles
+            .Where(article => freshRssFeedIds.Contains(article.FeedId))
+            .DistinctBy(article => article.Id)
+            .ToList();
+        if (candidates.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            if (candidates.Any(article => string.IsNullOrWhiteSpace(article.FreshRssEntryId)))
+            {
+                var states = await FreshRssService.GetArticleStatesAsync(_freshRssServerUrl, _freshRssUsername, _freshRssPassword);
+                var statesByLink = states
+                    .Select(state => (State: state, Link: NormalizeArticleLink(state.Link)))
+                    .Where(item => !string.IsNullOrEmpty(item.Link))
+                    .GroupBy(item => item.Link!, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(group => group.Key, group => group.First().State, StringComparer.OrdinalIgnoreCase);
+                foreach (var article in candidates)
+                {
+                    var link = NormalizeArticleLink(article.Link);
+                    if (link is not null && statesByLink.TryGetValue(link, out var remoteState))
+                    {
+                        article.FreshRssEntryId = remoteState.EntryId;
+                    }
+                }
+            }
+
+            var updates = candidates
+                .Where(article => !string.IsNullOrWhiteSpace(article.FreshRssEntryId))
+                .Select(article => new FreshRssReadUpdate(article.FreshRssEntryId, article.IsUnread));
+            await FreshRssService.UpdateReadStatesAsync(_freshRssServerUrl, _freshRssUsername, _freshRssPassword, updates);
+            await PersistAsync();
+        }
+        catch
+        {
+            // Reading locally remains available if FreshRSS is temporarily unreachable.
+        }
+    }
+
+    private static string? NormalizeArticleLink(string link)
+    {
+        if (!Uri.TryCreate(link, UriKind.Absolute, out var uri))
+        {
+            return string.IsNullOrWhiteSpace(link) ? null : link.Trim();
+        }
+
+        var builder = new UriBuilder(uri) { Fragment = string.Empty };
+        return builder.Uri.AbsoluteUri.TrimEnd('/');
     }
 
     public async Task CreateBackupAsync(string path)
     {
-        var backup = CreateState(includeArticles: false, includeFeedlyToken: false);
+        var backup = CreateState(includeArticles: false, includeFreshRssCredentials: false);
         backup.TextToSpeechVoiceId = string.Empty;
         await _storageService.SaveBackupAsync(path, backup);
     }
@@ -723,10 +980,14 @@ public sealed class MainViewModel : ObservableObject
     public async Task RestoreBackupAsync(string path)
     {
         var backup = await _storageService.LoadBackupAsync(path);
-        var currentFeedlyToken = _feedlyAccessToken;
+        var currentFreshRssServerUrl = _freshRssServerUrl;
+        var currentFreshRssUsername = _freshRssUsername;
+        var currentFreshRssPassword = _freshRssPassword;
         var currentTextToSpeechVoiceId = _textToSpeechVoiceId;
         backup.Articles = [];
-        backup.FeedlyAccessToken = currentFeedlyToken;
+        backup.FreshRssServerUrl = currentFreshRssServerUrl;
+        backup.FreshRssUsername = currentFreshRssUsername;
+        backup.FreshRssPassword = currentFreshRssPassword;
         backup.TextToSpeechVoiceId = currentTextToSpeechVoiceId;
         LoadState(backup);
         CleanupExpiredArticles();
@@ -741,30 +1002,6 @@ public sealed class MainViewModel : ObservableObject
         SelectedArticle = null;
         RefreshVisibleArticles();
         await PersistAsync();
-    }
-
-    public async Task<int> SyncFeedlyAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_feedlyAccessToken))
-        {
-            throw new InvalidOperationException("Add a Feedly access token first.");
-        }
-
-        var subscriptions = await FeedlyService.GetSubscriptionsAsync(_feedlyAccessToken);
-        var imported = 0;
-        foreach (var subscription in subscriptions)
-        {
-            if (_allFeeds.Any(feed => string.Equals(feed.Url, subscription.Url, StringComparison.OrdinalIgnoreCase)))
-            {
-                continue;
-            }
-            _allFeeds.Add(subscription);
-            imported++;
-        }
-
-        RebuildFeedGroups();
-        await RefreshAllAsync();
-        return imported;
     }
 
     private void RebuildFeedGroups()
@@ -814,6 +1051,7 @@ public sealed class MainViewModel : ObservableObject
         _showUnreadOnly = false;
         _showFavoritesOnly = false;
         _showSavedOnly = false;
+        _showPodcastsOnly = false;
         RefreshVisibleArticles();
     }
 
@@ -839,6 +1077,10 @@ public sealed class MainViewModel : ObservableObject
         {
             query = query.Where(article => article.IsSaved);
         }
+        if (_showPodcastsOnly)
+        {
+            query = query.Where(article => article.IsPodcast);
+        }
         if (!string.IsNullOrWhiteSpace(_selectedFeedId))
         {
             query = query.Where(article => article.FeedId == _selectedFeedId);
@@ -863,6 +1105,7 @@ public sealed class MainViewModel : ObservableObject
         ActiveSectionTitle = _selectedFeedId is not null
             ? _allFeeds.FirstOrDefault(feed => feed.Id == _selectedFeedId)?.Name ?? LocalizationManager.Instance["Main.Feed"]
             : _showSavedOnly ? LocalizationManager.Instance["Main.Saved"]
+            : _showPodcastsOnly ? LocalizationManager.Instance["Main.Podcasts"]
             : _showFavoritesOnly ? LocalizationManager.Instance["Main.ReadLaterSection"]
             : _showUnreadOnly ? LocalizationManager.Instance["Main.Unread"]
             : LocalizationManager.Instance["Main.AllArticles"];
@@ -871,6 +1114,9 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(AllArticlesSectionBackground));
         OnPropertyChanged(nameof(IsFavoritesFilterActive));
         OnPropertyChanged(nameof(IsSavedFilterActive));
+        OnPropertyChanged(nameof(TotalPodcastCount));
+        OnPropertyChanged(nameof(HasPodcastEpisodes));
+        OnPropertyChanged(nameof(IsPodcastListVisible));
         OnPropertyChanged(nameof(TotalUnreadCount));
         OnPropertyChanged(nameof(HasUnreadItems));
         OnPropertyChanged(nameof(TotalSavedCount));
@@ -970,6 +1216,7 @@ public sealed class MainViewModel : ObservableObject
         RecalculateUnreadCounts();
         RefreshVisibleArticles();
         _ = PersistAsync();
+        _ = SyncReadStatesToFreshRssAsync([SelectedArticle]);
     }
 
     private void ScheduleMarkAsRead(ArticleItem? article)
@@ -996,6 +1243,7 @@ public sealed class MainViewModel : ObservableObject
             article.IsUnread = false;
             RecalculateUnreadCounts();
             await PersistAsync();
+            await SyncReadStatesToFreshRssAsync([article]);
         }
         catch (OperationCanceledException)
         {
@@ -1107,15 +1355,17 @@ public sealed class MainViewModel : ObservableObject
 
     private async Task PersistAsync()
     {
-        await _storageService.SaveAsync(CreateState(includeArticles: true, includeFeedlyToken: true));
+        await _storageService.SaveAsync(CreateState(includeArticles: true, includeFreshRssCredentials: true));
     }
 
-    private AppState CreateState(bool includeArticles, bool includeFeedlyToken)
+    private AppState CreateState(bool includeArticles, bool includeFreshRssCredentials)
     {
         return new AppState
         {
             LastRefreshAt = _lastRefreshAt,
-            FeedlyAccessToken = includeFeedlyToken ? _feedlyAccessToken : string.Empty,
+            FreshRssServerUrl = includeFreshRssCredentials ? _freshRssServerUrl : string.Empty,
+            FreshRssUsername = includeFreshRssCredentials ? _freshRssUsername : string.Empty,
+            FreshRssPassword = includeFreshRssCredentials ? _freshRssPassword : string.Empty,
             ArticleRetentionDays = _articleRetentionDays,
             AutoRefreshIntervalMinutes = _autoRefreshIntervalMinutes,
             MarkAsReadDelaySeconds = _markAsReadDelaySeconds,
@@ -1133,6 +1383,7 @@ public sealed class MainViewModel : ObservableObject
             ShowAllArticlesList = _showAllArticlesList,
             ShowSavedList = _showSavedList,
             ShowUnreadList = _showUnreadList,
+            ShowPodcastList = _showPodcastList,
             Folders = [.. _folders],
             Feeds = _allFeeds.Select(feed => new FeedState
             {
@@ -1141,7 +1392,9 @@ public sealed class MainViewModel : ObservableObject
                 Url = feed.Url,
                 GroupName = feed.GroupName,
                 AccentHex = feed.AccentHex
-                , FaviconUrl = feed.FaviconUrl
+                , FaviconUrl = feed.FaviconUrl,
+                IsManagedByFreshRss = feed.IsManagedByFreshRss,
+                FreshRssFeedId = feed.FreshRssFeedId
             }).ToList(),
             Articles = includeArticles ? _allArticles.Select(article => new ArticleState
             {
@@ -1157,10 +1410,12 @@ public sealed class MainViewModel : ObservableObject
                 ThumbnailLabel = article.ThumbnailLabel,
                 ThumbnailUrl = article.ThumbnailUrl,
                 FaviconUrl = article.FaviconUrl,
+                AudioUrl = article.AudioUrl,
                 AccentHex = article.ThumbnailBrush.Color.ToString(),
                 IsFavorite = article.IsFavorite,
                 IsSaved = article.IsSaved,
-                IsUnread = article.IsUnread
+                IsUnread = article.IsUnread,
+                FreshRssEntryId = article.FreshRssEntryId
             }).ToList() : []
         };
     }

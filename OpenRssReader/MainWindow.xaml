@@ -208,9 +208,29 @@
                             <Border Style="{StaticResource SoftCardBorderStyle}" MouseLeftButtonUp="FeedItem_MouseLeftButtonUp" Cursor="Hand">
                                 <Border.ContextMenu>
                                     <ContextMenu Style="{StaticResource ReaderContextMenuStyle}">
-                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.EditFeed}" Click="EditFeedMenuItem_Click" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{loc:Loc Context.EditFeed}" Click="EditFeedMenuItem_Click" CommandParameter="{Binding}">
+                                            <MenuItem.Style>
+                                                <Style TargetType="MenuItem" BasedOn="{StaticResource ReaderMenuItemStyle}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsManagedByFreshRss}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </MenuItem.Style>
+                                        </MenuItem>
                                         <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.MarkAllAsRead}" Click="MarkFeedAsReadMenuItem_Click" CommandParameter="{Binding}" />
-                                        <MenuItem Style="{StaticResource ReaderMenuItemStyle}" Header="{loc:Loc Context.DeleteFeed}" Click="DeleteFeedMenuItem_Click" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{loc:Loc Context.DeleteFeed}" Click="DeleteFeedMenuItem_Click" CommandParameter="{Binding}">
+                                            <MenuItem.Style>
+                                                <Style TargetType="MenuItem" BasedOn="{StaticResource ReaderMenuItemStyle}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsManagedByFreshRss}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </MenuItem.Style>
+                                        </MenuItem>
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <Grid>
@@ -264,7 +284,7 @@
                         </Grid>
                     </DockPanel>
                     <TextBlock Text="{loc:Loc Main.RssFeeds}" FontSize="38" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                    <TextBlock Text="{Binding LastRefreshLabel}" Margin="0,2,0,24" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <TextBlock Text="{Binding LastRefreshLabel}" Margin="0,2,0,30" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}" />
                     <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectAllCommand}" Cursor="Hand" Visibility="{Binding ShowAllArticlesList, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock Text="{loc:Loc Main.AllArticles}" HorizontalAlignment="Left" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="5,0,0,0"/>
                     </Button>
@@ -274,13 +294,19 @@
                             <TextBlock Text="{Binding TotalUnreadCount}" Margin="10,0,0,0" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Visibility="{Binding HasUnreadItems, Converter={StaticResource BooleanToVisibilityConverter}}" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectSavedCommand}" Cursor="Hand" Margin="0,0,0,20" Visibility="{Binding ShowSavedList, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectSavedCommand}" Cursor="Hand" Visibility="{Binding ShowSavedList, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <TextBlock Text="{loc:Loc Main.Saved}" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="5,0,0,0"/>
                             <TextBlock Text="{Binding TotalSavedCount}" Margin="10,0,0,0" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Visibility="{Binding HasSavedItems, Converter={StaticResource BooleanToVisibilityConverter}}" />
                         </StackPanel>
                     </Button>
-                    <ItemsControl ItemsSource="{Binding FeedGroups}" />
+                    <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectPodcastsCommand}" Cursor="Hand" Visibility="{Binding IsPodcastListVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <TextBlock Text="{loc:Loc Main.Podcasts}" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="5,0,0,0" />
+                            <TextBlock Text="{Binding TotalPodcastCount}" Margin="10,0,0,0" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <ItemsControl ItemsSource="{Binding FeedGroups}" Margin="0,12,0,0" />
                 </StackPanel>
             </hc:ScrollViewer>
         </Border>
@@ -405,6 +431,36 @@
                         <TextBlock Text="{Binding SelectedArticle.DisplayDateLabel}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" />
                         <TextBlock Text="{Binding SelectedArticleDisplayTitle}" Margin="0,10,0,12" FontFamily="{Binding ReadingTitleFontFamily}" FontSize="{Binding ReadingTitleFontSize}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding SelectedArticle.AuthorLine}" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" FontWeight="SemiBold" />
+                        <Border Margin="0,18,0,0" Padding="14" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" CornerRadius="12" Visibility="{Binding IsSelectedPodcast, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="PodcastPlayPauseButton" Width="42" Height="42" Margin="0" Padding="0" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="PodcastPlayPauseButton_Click" ToolTip="{loc:Loc Main.PlayEpisode}">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="PodcastPlaySurface" Background="Transparent" CornerRadius="8">
+                                                <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Path x:Name="PodcastPlayPauseIcon" Data="M8,5 L19,12 L8,19 Z" Fill="{DynamicResource IconBrush}" />
+                                                </Viewbox>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="PodcastPlaySurface" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                    <Slider x:Name="PodcastProgress" Minimum="0" Maximum="1" ValueChanged="PodcastProgress_ValueChanged" />
+                                    <TextBlock x:Name="PodcastTimeLabel" Text="00:00 / 00:00" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0" />
+                                </StackPanel>
+                                <Slider x:Name="PodcastVolume" Grid.Column="2" Width="80" Minimum="0" Maximum="1" Value="0.8" ValueChanged="PodcastVolume_ValueChanged" ToolTip="{loc:Loc Main.PodcastVolume}" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
                     </StackPanel>
                 <WebBrowser x:Name="ArticleBrowser" Grid.Row="1"/>
                 </Grid>
