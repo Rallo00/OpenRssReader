@@ -296,6 +296,7 @@ public sealed class MainViewModel : ObservableObject
             }
         }
         await PersistAsync();
+        await RefreshFeedsAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -635,9 +636,31 @@ public sealed class MainViewModel : ObservableObject
         await SyncReadStatesToFreshRssAsync(changedArticles);
     }
 
+    public async Task MarkFolderAsReadAsync(string folderName)
+    {
+        var feedIds = _allFeeds
+            .Where(feed => string.Equals(feed.GroupName, folderName, StringComparison.OrdinalIgnoreCase))
+            .Select(feed => feed.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var changedArticles = _allArticles.Where(article => feedIds.Contains(article.FeedId) && article.IsUnread).ToList();
+        foreach (var article in changedArticles)
+        {
+            article.IsUnread = false;
+        }
+
+        if (changedArticles.Count == 0)
+        {
+            return;
+        }
+
+        RecalculateUnreadCounts();
+        RefreshVisibleArticles();
+        await PersistAsync();
+        await SyncReadStatesToFreshRssAsync(changedArticles);
+    }
+
     public string FreshRssServerUrl => _freshRssServerUrl;
     public string FreshRssUsername => _freshRssUsername;
-
     public string FreshRssPassword => _freshRssPassword;
 
     public async Task SetArticleRetentionDaysAsync(int days)
