@@ -14,7 +14,7 @@ This project has been built with the support of AI.
 * Back up and restore feeds, folders, and settings (excluding articles);
 * Mark articles as Read or Unread;
 * Open articles in their original source;
-* Integrate a Feedly Enterprise account via API Key;
+* Integrate FreshRSS (sync only, not possible to add/edit/remove feeds);
 * Customize various UI elements;
 * Search articles by title.
 * Read article feature (using Text-To-Speech from Microsoft installed SAPI voices)
