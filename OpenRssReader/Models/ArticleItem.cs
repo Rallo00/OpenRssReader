@@ -13,6 +13,7 @@ public sealed class ArticleItem : ObservableObject
     private bool _hasPublicationDate;
     private string _htmlContent = string.Empty;
     private string _thumbnailUrl = string.Empty;
+    private string _audioUrl = string.Empty;
 
     public required string Id { get; init; }
     public required string FeedId { get; init; }
@@ -56,6 +57,17 @@ public sealed class ArticleItem : ObservableObject
         }
     }
     public string FaviconUrl { get; init; } = string.Empty;
+    public string AudioUrl
+    {
+        get => _audioUrl;
+        set
+        {
+            if (SetProperty(ref _audioUrl, value))
+            {
+                OnPropertyChanged(nameof(IsPodcast));
+            }
+        }
+    }
     public required SolidColorBrush ThumbnailBrush { get; init; }
     public required SolidColorBrush HeroBrush { get; init; }
 
@@ -80,6 +92,7 @@ public sealed class ArticleItem : ObservableObject
     public string DisplayTime => PublishedAt.ToLocalTime().ToString("HH:mm");
     public string DisplayDay => PublishedAt.ToLocalTime().ToString("dddd, dd MMMM yyyy").ToUpperInvariant();
     public bool HasThumbnail => !string.IsNullOrWhiteSpace(ThumbnailUrl);
+    public bool IsPodcast => !string.IsNullOrWhiteSpace(AudioUrl);
     public string DisplayDateLabel => PublishedAt.ToLocalTime().ToString("dddd, dd MMMM yyyy 'at' HH:mm").ToUpperInvariant();
     public string AuthorLine => $"{Author.ToUpperInvariant()}  {SourceName.ToUpperInvariant()}";
     public string FooterHint => $"Saved locally from {SourceName}. Open the original article for the full experience.";
@@ -88,6 +101,9 @@ public sealed class ArticleItem : ObservableObject
         get => _hasPublicationDate;
         set => SetProperty(ref _hasPublicationDate, value);
     }
+
+    // FreshRSS entry identifiers are needed to mirror read state through Google Reader API.
+    public string FreshRssEntryId { get; set; } = string.Empty;
 
     // Set for headline-only feeds. The page is fetched only when the article is opened.
     public bool RequiresArticleContentFetch { get; set; }

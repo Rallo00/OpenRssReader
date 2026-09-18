@@ -23,6 +23,8 @@ public sealed class FeedSubscription : ObservableObject
         set => SetProperty(ref _url, value);
     }
     public string GroupName { get; set; } = string.Empty;
+    public bool IsManagedByFreshRss { get; init; }
+    public string FreshRssFeedId { get; init; } = string.Empty;
     public required SolidColorBrush AccentBrush { get; init; }
     public string AccentHex { get; init; } = "#5A8FD8";
     public string FaviconUrl

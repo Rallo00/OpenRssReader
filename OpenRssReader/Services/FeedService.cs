@@ -238,6 +238,7 @@ public sealed class FeedService
         var embeddedContent = GetElementValue(item, "encoded", null) ?? GetElementValue(item, "content", null);
         var hasFullContent = !string.IsNullOrWhiteSpace(embeddedContent);
         var content = embeddedContent ?? $"<p>{System.Net.WebUtility.HtmlEncode(summary)}</p>";
+        var audioUrl = GetPodcastAudioUrl(item);
         var author = GetElementValue(item, "creator", null)
             ?? GetElementValue(item, "author", subscription.Name);
         var publishedAt = isAtom
@@ -270,9 +271,10 @@ public sealed class FeedService
             ThumbnailLabel = CreateThumbnailLabel(subscription.Name),
             ThumbnailUrl = HtmlRenderer.ExtractImageUrl(content) ?? GetMediaThumbnailUrl(item),
             FaviconUrl = subscription.FaviconUrl,
+            AudioUrl = audioUrl,
             ThumbnailBrush = subscription.AccentBrush,
             HeroBrush = BrushFactory.CreateHeroBrush(subscription.AccentHex),
-            RequiresArticleContentFetch = NeedsArticleContentFetch(link ?? subscription.Url, content)
+            RequiresArticleContentFetch = string.IsNullOrWhiteSpace(audioUrl) && NeedsArticleContentFetch(link ?? subscription.Url, content)
         };
     }
 
@@ -300,10 +302,37 @@ public sealed class FeedService
     {
         return item.Elements()
             .FirstOrDefault(element =>
-                element.Name.LocalName is "content" or "thumbnail" or "enclosure" &&
+                (element.Name.LocalName is "content" or "thumbnail" ||
+                 element.Name.LocalName == "enclosure" && !IsAudioEnclosure(element)) &&
                 !string.IsNullOrWhiteSpace(element.Attribute("url")?.Value))
             ?.Attribute("url")?.Value
             ?.Trim() ?? string.Empty;
+    }
+
+    private static string GetPodcastAudioUrl(XElement item)
+    {
+        return item.Elements()
+            .FirstOrDefault(IsAudioEnclosure)
+            ?.Attribute("url")?.Value
+            ?.Trim() ?? string.Empty;
+    }
+
+    private static bool IsAudioEnclosure(XElement element)
+    {
+        if (element.Name.LocalName != "enclosure" || string.IsNullOrWhiteSpace(element.Attribute("url")?.Value))
+        {
+            return false;
+        }
+
+        var contentType = element.Attribute("type")?.Value;
+        if (!string.IsNullOrWhiteSpace(contentType) && contentType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var path = element.Attribute("url")?.Value;
+        return path is not null && new[] { ".mp3", ".m4a", ".aac", ".ogg", ".wav" }
+            .Any(extension => path.Contains(extension, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string? ExtractArticleContent(string html, Uri baseUri, string title)

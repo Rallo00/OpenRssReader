@@ -3,7 +3,9 @@ namespace OpenRssReader.Services;
 public sealed class AppState
 {
     public DateTimeOffset? LastRefreshAt { get; set; }
-    public string FeedlyAccessToken { get; set; } = string.Empty;
+    public string FreshRssServerUrl { get; set; } = string.Empty;
+    public string FreshRssUsername { get; set; } = string.Empty;
+    public string FreshRssPassword { get; set; } = string.Empty;
     public int ArticleRetentionDays { get; set; } = 30;
     public int AutoRefreshIntervalMinutes { get; set; } = 30;
     public int MarkAsReadDelaySeconds { get; set; } = 3;
@@ -21,6 +23,7 @@ public sealed class AppState
     public bool ShowAllArticlesList { get; set; } = true;
     public bool ShowSavedList { get; set; } = true;
     public bool ShowUnreadList { get; set; } = true;
+    public bool ShowPodcastList { get; set; } = true;
     public List<string> Folders { get; set; } = [];
     public List<FeedState> Feeds { get; set; } = [];
     public List<ArticleState> Articles { get; set; } = [];
@@ -34,6 +37,8 @@ public sealed class FeedState
     public string GroupName { get; set; } = string.Empty;
     public string AccentHex { get; set; } = "#5A8FD8";
     public string FaviconUrl { get; set; } = string.Empty;
+    public bool IsManagedByFreshRss { get; set; }
+    public string FreshRssFeedId { get; set; } = string.Empty;
 }
 
 public sealed class ArticleState
@@ -50,8 +55,10 @@ public sealed class ArticleState
     public string ThumbnailLabel { get; set; } = "RSS";
     public string ThumbnailUrl { get; set; } = string.Empty;
     public string FaviconUrl { get; set; } = string.Empty;
+    public string AudioUrl { get; set; } = string.Empty;
     public string AccentHex { get; set; } = "#5A8FD8";
     public bool IsFavorite { get; set; }
     public bool IsSaved { get; set; }
     public bool IsUnread { get; set; } = true;
+    public string FreshRssEntryId { get; set; } = string.Empty;
 }

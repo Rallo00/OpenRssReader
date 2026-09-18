@@ -82,20 +82,24 @@
                         </StackPanel>
                         <StackPanel Margin="0,10,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <ToggleButton x:Name="DisplaySourceFaviconsCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
-                                <TextBlock Text="{loc:Loc Settings.DisplayFavicons}" Margin="10,3,0,0" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                <ToggleButton x:Name="ShowAllArticlesListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
-                                <TextBlock Text="{loc:Loc Settings.ShowAllArticles}" Margin="10,3,0,0" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                <ToggleButton x:Name="ShowUnreadListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
-                                <TextBlock Text="{loc:Loc Settings.ShowUnread}" Margin="10,3,0,0" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                <ToggleButton x:Name="ShowSavedListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
-                                <TextBlock Text="{loc:Loc Settings.ShowSaved}" Margin="10,3,0,0" />
+                                <StackPanel Orientation="Vertical">
+                                    <ToggleButton x:Name="DisplaySourceFaviconsCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                    <ToggleButton Margin="0,5,0,0" x:Name="ShowAllArticlesListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                    <ToggleButton Margin="0,5,0,0" x:Name="ShowUnreadListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                    <ToggleButton Margin="0,5,0,0" x:Name="ShowSavedListCheckBox" Style="{StaticResource ToggleButtonSwitch}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Vertical" Margin="5,0,0,0">
+                                    <TextBlock Margin="0,3,0,0" Text="{loc:Loc Settings.DisplayFavicons}"/>
+                                    <TextBlock Margin="0,13,0,0" Text="{loc:Loc Settings.ShowAllArticles}"/>
+                                    <TextBlock Margin="0,13,0,0" Text="{loc:Loc Settings.ShowUnread}"/>
+                                    <TextBlock Margin="0,13,0,0" Text="{loc:Loc Settings.ShowSaved}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Vertical" Margin="91,0,0,0">
+                                    <ToggleButton x:Name="DisplayPodcastListCheckbox" Style="{StaticResource ToggleButtonSwitch}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Vertical" Margin="5,0,0,0">
+                                    <TextBlock Margin="0,3,0,0" Text="{loc:Loc Settings.ShowPodcasts}"/>
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
                         <TextBlock x:Name="GeneralStatusText" Margin="0,10,0,0" Foreground="Firebrick" />
@@ -176,14 +180,18 @@
                 <Grid Margin="10">
                     <TextBlock Text="{loc:Loc Settings.IntegrationsIntro}" FontWeight="Bold" FontSize="14" />
                     <StackPanel Margin="0,40,0,0">
-                        <TextBlock Text="{loc:Loc Settings.Feedly}" FontWeight="Bold" />
-                        <TextBlock Text="{loc:Loc Settings.FeedlyInfo}" Margin="0,5,0,0" FontStyle="Italic" Foreground="#888" />
-                        <TextBox x:Name="FeedlyTokenTextBox" Margin="0,5,0,0" Width="250" HorizontalAlignment="Left" />
+                        <TextBlock Text="{loc:Loc Settings.FreshRss}" FontWeight="Bold" />
+                        <TextBlock Text="{loc:Loc Settings.FreshRssInfo}" Margin="0,5,0,0" FontStyle="Italic" Foreground="#888" TextWrapping="Wrap" />
+                        <TextBlock Text="{loc:Loc Settings.FreshRssServerUrl}" Margin="0,16,0,5" />
+                        <TextBox x:Name="FreshRssServerUrlTextBox" Width="360" HorizontalAlignment="Left" />
+                        <TextBlock Text="{loc:Loc Settings.FreshRssUsername}" Margin="0,12,0,5" />
+                        <TextBox x:Name="FreshRssUsernameTextBox" Width="360" HorizontalAlignment="Left" />
+                        <TextBlock Text="{loc:Loc Settings.FreshRssPassword}" Margin="0,12,0,5" />
+                        <PasswordBox x:Name="FreshRssPasswordBox" Width="360" HorizontalAlignment="Left" />
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <Button Content="{loc:Loc Settings.ConnectToken}" Click="ConnectFeedlyButton_Click" />
-                            <Button Content="{loc:Loc Settings.SyncFeeds}" Click="SyncFeedlyButton_Click" Margin="10,0,0,0" />
+                            <Button Content="{loc:Loc Settings.SaveFreshRss}" Click="SaveFreshRssButton_Click" />
                         </StackPanel>
-                        <TextBlock x:Name="StatusText" Margin="0,10,0,0" TextWrapping="Wrap" />
+                        <TextBlock x:Name="FreshRssStatusText" Margin="0,10,0,0" TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
             </TabItem>
