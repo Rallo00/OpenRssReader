@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using OpenRssReader.Models;
 using OpenRssReader.Localization;
+using OpenRssReader.Services;
 using OpenRssReader.ViewModels;
 
 namespace OpenRssReader;
@@ -21,6 +22,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _podcastProgressTimer = new();
     private readonly MediaPlayer _podcastPlayer = new();
     private readonly HttpClient _podcastHttpClient = new();
+    private readonly GitHubUpdateService _updateService = new();
     private bool _isPodcastPlaying;
     private bool _isUpdatingPodcastProgress;
     private bool _startPodcastWhenReady;
@@ -42,11 +44,13 @@ public partial class MainWindow : Window
         Loaded += async (_, _) =>
         {
             await _viewModel.InitializeAsync();
+            await RestorePendingUpdateBackupAsync();
             ApplyAppearance();
             ArticleBrowser.NavigateToString(_viewModel.SelectedArticleHtml);
             _ = ConfigurePodcastPlayerAsync();
             ResizeArticleBrowser();
             ConfigureAutomaticRefreshTimer();
+            await CheckForApplicationUpdateAsync();
         };
         Closed += async (_, _) =>
         {
@@ -63,6 +67,70 @@ public partial class MainWindow : Window
             _viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
             await _viewModel.DisposeAsync();
         };
+    }
+
+    private async Task RestorePendingUpdateBackupAsync()
+    {
+        var arguments = Environment.GetCommandLineArgs();
+        var backupArgumentIndex = Array.FindIndex(arguments, argument => string.Equals(argument, "--restore-backup", StringComparison.OrdinalIgnoreCase));
+        if (backupArgumentIndex < 0 || backupArgumentIndex + 1 >= arguments.Length)
+        {
+            return;
+        }
+
+        var backupPath = arguments[backupArgumentIndex + 1];
+        if (!File.Exists(backupPath))
+        {
+            return;
+        }
+
+        try
+        {
+            await _viewModel.RestoreBackupAsync(backupPath);
+            File.Delete(backupPath);
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(
+                $"The application was updated, but the backup could not be restored. The backup remains available at:\n{backupPath}\n\n{exception.Message}",
+                "Open RSS Reader update",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private async Task CheckForApplicationUpdateAsync()
+    {
+        try
+        {
+            var release = await _updateService.CheckForUpdateAsync();
+            if (release is null)
+            {
+                return;
+            }
+
+            var changelog = string.IsNullOrWhiteSpace(release.Changelog) ? "No changelog provided." : release.Changelog;
+            var message = $"New application update available.\nCurrent version: {GitHubUpdateService.CurrentVersionLabel}\nNew version: {release.TagName}\n\nChangelog:\n{changelog}\n\nInstall this update now?";
+            if (MessageBox.Show(message, "Open RSS Reader update", MessageBoxButton.YesNo, MessageBoxImage.Information) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var backupPath = Path.Combine(desktop, $"OpenRssReader-update-backup-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+            await _viewModel.CreateBackupAsync(backupPath);
+            var archivePath = await _updateService.DownloadAsync(release);
+            _updateService.StartInstaller(archivePath, backupPath);
+            Application.Current.Shutdown();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(
+                $"The update could not be installed.\n\n{exception.Message}",
+                "Open RSS Reader update",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)

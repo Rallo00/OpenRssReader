@@ -1,5 +1,5 @@
 {
-  "App.Title": "Άνοιγμα ανάγνωσης RSS v1.4",
+  "App.Title": "Άνοιγμα ανάγνωσης RSS v1.5",
   "Main.Settings": "Settings",
   "Main.RefreshFeeds": "Ανανέωση τροφών",
   "Main.SubscribeToFeed": "Εγγραφή στην τροφοδοσία",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Παύση ανάγνωσης",
   "Main.ReadArticleAloud": "Διαβάστε το άρθρο δυνατά",
   "Settings.Title": "Settings",
+  "Settings.About": "Σχετικά",
+  "Settings.LatestVersion": "Χρησιμοποιείτε την πιο πρόσφατη έκδοση.",
   "Settings.General": "Γενικά",
   "Settings.GeneralIntro": "Άνοιγμα RSS Τα καταστήματα αναγνωστών τροφοδοτούν και το άρθρο δηλώνει τοπικά σε αυτή τη συσκευή.",
   "Settings.KeepArticles": "Διατήρηση συγχρονισμένων ειδών ζωοτροφών για",

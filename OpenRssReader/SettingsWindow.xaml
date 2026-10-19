@@ -195,6 +195,28 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+            <!-- TAB ABOUT -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Width="16" Height="16" Margin="0,0,6,0">
+                            <Path Data="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20 M12 16v-4 M12 8h.01" Stroke="#444443" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        </Viewbox>
+                        <TextBlock Text="{loc:Loc Settings.About}" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="10">
+                    <StackPanel>
+                        <TextBlock Text="{loc:Loc Settings.AboutIntro}" FontWeight="Bold" FontSize="14" />
+                        <StackPanel Orientation="Horizontal" Margin="0,22,0,0">
+                            <TextBlock Text="{loc:Loc Settings.CurrentVersion}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="CurrentVersionText" Margin="8,0,0,0" FontWeight="Bold" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Content="{loc:Loc Settings.CheckForUpdates}" Click="CheckForUpdatesButton_Click" Margin="0,20,0,0" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="AboutStatusText" Margin="0,12,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
             <!-- TAB BACKUP RESTORE -->
             <TabItem>
                 <TabItem.Header>

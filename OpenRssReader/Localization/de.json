@@ -1,5 +1,5 @@
 {
-  "App.Title": "Open RSS Reader v1.4",
+  "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Einstellungen",
   "Main.RefreshFeeds": "Frischfuttermittel",
   "Main.SubscribeToFeed": "Abonnieren von Futtermitteln",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pausenwert",
   "Main.ReadArticleAloud": "Lesen Sie Artikel vorlesen",
   "Settings.Title": "Einstellungen",
+  "Settings.About": "Über",
+  "Settings.LatestVersion": "Sie verwenden die neueste Version.",
   "Settings.General": "Generalgeneral",
   "Settings.GeneralIntro": "Offenes RSS Reader speichert Feeds und Artikelstatus lokal auf diesem Gerät.",
   "Settings.KeepArticles": "Halten Sie synchronisierte Feed-Artikel für",

@@ -1,5 +1,5 @@
 {
-  "App.Title": "Open RSS Reader v1.4",
+  "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Nustatymai",
   "Main.RefreshFeeds": "Atnaujinti kanalus",
   "Main.SubscribeToFeed": "Prenumeruoti pašarus",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Puzų skaitymas",
   "Main.ReadArticleAloud": "Skaityti straipsnį garsiai",
   "Settings.Title": "Nustatymai",
+  "Settings.About": "Apie",
+  "Settings.LatestVersion": "Naudojate naujausią versiją.",
   "Settings.General": "Bendrosios nuostatos",
   "Settings.GeneralIntro": "Open RSS Skaitytojas saugo maitinimą ir straipsnį vietoje šiame įrenginyje.",
   "Settings.KeepArticles": "Laikyti sinchronizuotus pašarų produktus",

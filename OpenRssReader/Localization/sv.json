@@ -1,5 +1,5 @@
 {
-  "App.Title": "Öppna RSS Reader v1.4",
+  "App.Title": "Öppna RSS Reader v1.5",
   "Main.Settings": "Inställningar",
   "Main.RefreshFeeds": "Refresh feeds",
   "Main.SubscribeToFeed": "Prenumerera på feed",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pausa läsning",
   "Main.ReadArticleAloud": "Läs artikel högt",
   "Settings.Title": "Inställningar",
+  "Settings.About": "Om",
+  "Settings.LatestVersion": "Du använder den senaste versionen.",
   "Settings.General": "General general",
   "Settings.GeneralIntro": "Öppna RSS Reader lagrar foder och artikel stat lokalt på denna enhet.",
   "Settings.KeepArticles": "Håll synkroniserade foderartiklar för",

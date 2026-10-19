@@ -1,5 +1,5 @@
 {
-  "App.Title": "Open RSS Reader v1.4",
+  "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Ajustes",
   "Main.RefreshFeeds": "Refrescos de alimentación",
   "Main.SubscribeToFeed": "Suscríbete a la alimentación",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Lección de pausa",
   "Main.ReadArticleAloud": "Leer artículo en voz alta",
   "Settings.Title": "Ajustes",
+  "Settings.About": "Acerca de",
+  "Settings.LatestVersion": "Está utilizando la versión más reciente.",
   "Settings.General": "General",
   "Settings.GeneralIntro": "Abierto RSS Tiendas de lectura alimenta y artículo de estado local en este dispositivo.",
   "Settings.KeepArticles": "Mantenga artículos de alimentación sincronizados para",

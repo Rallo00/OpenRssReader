@@ -1,5 +1,5 @@
 {
-  "App.Title": "Åpne RSS Reader v1.4",
+  "App.Title": "Åpne RSS Reader v1.5",
   "Main.Settings": "Innstillinger",
   "Main.RefreshFeeds": "Oppfrisk feeds",
   "Main.SubscribeToFeed": "Abonner på fôr",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pausa lesing",
   "Main.ReadArticleAloud": "Les artikkelen høyt",
   "Settings.Title": "Innstillinger",
+  "Settings.About": "Om",
+  "Settings.LatestVersion": "Du bruker den nyeste versjonen.",
   "Settings.General": "Generelt",
   "Settings.GeneralIntro": "Åpne RSS Leser lagrer feeds og artikkel state lokalt på denne enheten.",
   "Settings.KeepArticles": "Hold synkroniserte feed artikler for",

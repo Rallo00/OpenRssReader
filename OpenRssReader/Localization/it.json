@@ -1,5 +1,5 @@
 {
-  "App.Title": "Open RSS Reader v1.4",
+  "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Impostazioni",
   "Main.RefreshFeeds": "Aggiorna feed",
   "Main.SubscribeToFeed": "Aggiungi feed",
@@ -33,6 +33,11 @@
   "Main.PauseReading": "Metti in pausa la lettura",
   "Main.ReadArticleAloud": "Leggi l'articolo ad alta voce",
   "Settings.Title": "Impostazioni",
+  "Settings.About": "Informazioni",
+  "Settings.LatestVersion": "Stai usando la versione più recente.",
+  "Settings.AboutIntro": "Informazioni sull'applicazione e aggiornamenti.",
+  "Settings.CurrentVersion": "Versione corrente:",
+  "Settings.CheckForUpdates": "Controlla aggiornamenti",
   "Settings.General": "Generali",
   "Settings.GeneralIntro": "Open RSS Reader conserva i feed e lo stato degli articoli localmente su questo dispositivo.",
   "Settings.KeepArticles": "Conserva gli articoli dei feed sincronizzati per",

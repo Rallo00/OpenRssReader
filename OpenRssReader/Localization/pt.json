@@ -1,5 +1,5 @@
 {
-  "App.Title": "Abrir o Leitor RSS v1.4",
+  "App.Title": "Abrir o Leitor RSS v1.5",
   "Main.Settings": "Configurações",
   "Main.RefreshFeeds": "Actualizar as fontes de notícias",
   "Main.SubscribeToFeed": "Subscrever a fonte",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pausar a leitura",
   "Main.ReadArticleAloud": "Ler o artigo em voz alta",
   "Settings.Title": "Configurações",
+  "Settings.About": "Sobre",
+  "Settings.LatestVersion": "Está a utilizar a versão mais recente.",
   "Settings.General": "Geral",
   "Settings.GeneralIntro": "Abrir RSS Reader armazena fontes e estado de artigo localmente neste dispositivo.",
   "Settings.KeepArticles": "Manter artigos de alimentação sincronizados para",

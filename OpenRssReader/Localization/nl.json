@@ -1,5 +1,5 @@
 {
-  "App.Title": "RSS-lezer openen v1.4",
+  "App.Title": "RSS-lezer openen v1.5",
   "Main.Settings": "Instellingen",
   "Main.RefreshFeeds": "Voeder vernieuwen",
   "Main.SubscribeToFeed": "Abonneren op voer",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Lezen pauzeren",
   "Main.ReadArticleAloud": "Lees artikel hardop",
   "Settings.Title": "Instellingen",
+  "Settings.About": "Over",
+  "Settings.LatestVersion": "U gebruikt de nieuwste versie.",
   "Settings.General": "Algemeen",
   "Settings.GeneralIntro": "RSS openen Lezer slaat feeds en artikel staat lokaal op dit apparaat.",
   "Settings.KeepArticles": "Gesynchroniseerde voedingsartikelen voor",

@@ -1,5 +1,5 @@
 {
-  "App.Title": "RSS olvasó megnyitása v1.4",
+  "App.Title": "RSS olvasó megnyitása v1.5",
   "Main.Settings": "Beállítások",
   "Main.RefreshFeeds": "Friss takarmányok",
   "Main.SubscribeToFeed": "Feliratkozás takarmányozásra",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Szüneteltetés",
   "Main.ReadArticleAloud": "Olvassa el a cikket hangosan",
   "Settings.Title": "Beállítások",
+  "Settings.About": "Névjegy",
+  "Settings.LatestVersion": "A legújabb verziót használja.",
   "Settings.General": "Általános",
   "Settings.GeneralIntro": "RSS megnyitása Reader tárolja feed és cikk állapotát helyben ezen az eszközön.",
   "Settings.KeepArticles": "Szinkronizált takarmánycikkek tartása",

@@ -1,5 +1,5 @@
 {
-  "App.Title": "Otwórz czytnik RSS v1.4",
+  "App.Title": "Otwórz czytnik RSS v1.5",
   "Main.Settings": "Ustawienia",
   "Main.RefreshFeeds": "Pasze odświeżające",
   "Main.SubscribeToFeed": "Subskrybować do karmienia",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Wstrzymaj czytanie",
   "Main.ReadArticleAloud": "Przeczytaj artykuł na głos",
   "Settings.Title": "Ustawienia",
+  "Settings.About": "Informacje",
+  "Settings.LatestVersion": "Używasz najnowszej wersji.",
   "Settings.General": "Ogólne",
   "Settings.GeneralIntro": "Otwórz RSS Reader przechowuje kanały i stan wiadomości lokalnie na tym urządzeniu.",
   "Settings.KeepArticles": "Przechowywać zsynchronizowane artykuły paszowe dla",

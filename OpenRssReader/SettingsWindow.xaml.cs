@@ -1,9 +1,12 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Globalization;
+using System.IO;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Win32;
+using OpenRssReader.Localization;
+using OpenRssReader.Services;
 using OpenRssReader.ViewModels;
 
 namespace OpenRssReader;
@@ -33,12 +36,14 @@ public partial class SettingsWindow : Window
         .ToList();
 
     private readonly MainViewModel _viewModel;
+    private readonly GitHubUpdateService _updateService = new();
     private bool _isInitializing;
 
     public SettingsWindow(MainViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        CurrentVersionText.Text = GitHubUpdateService.CurrentVersionLabel;
         _isInitializing = true;
         FreshRssServerUrlTextBox.Text = _viewModel.FreshRssServerUrl;
         FreshRssUsernameTextBox.Text = _viewModel.FreshRssUsername;
@@ -219,6 +224,40 @@ public partial class SettingsWindow : Window
     {
         var languageName = SelectedText(ApplicationLanguageComboBox);
         return ApplicationLanguageCodes.TryGetValue(languageName, out var languageCode) ? languageCode : "en";
+    }
+
+    private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            AboutStatusText.Text = "Checking for updates...";
+            var release = await _updateService.CheckForUpdateAsync();
+            if (release is null)
+            {
+                AboutStatusText.Text = LocalizationManager.Instance["Settings.LatestVersion"];
+                return;
+            }
+
+            var changelog = string.IsNullOrWhiteSpace(release.Changelog) ? "No changelog provided." : release.Changelog;
+            var message = $"New application update available.\nCurrent version: {GitHubUpdateService.CurrentVersionLabel}\nNew version: {release.TagName}\n\nChangelog:\n{changelog}\n\nInstall this update now?";
+            if (MessageBox.Show(message, "Open RSS Reader update", MessageBoxButton.YesNo, MessageBoxImage.Information) != MessageBoxResult.Yes)
+            {
+                AboutStatusText.Text = "Update postponed.";
+                return;
+            }
+
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var backupPath = Path.Combine(desktop, $"OpenRssReader-update-backup-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+            AboutStatusText.Text = "Creating backup and downloading update...";
+            await _viewModel.CreateBackupAsync(backupPath);
+            var archivePath = await _updateService.DownloadAsync(release);
+            _updateService.StartInstaller(archivePath, backupPath);
+            Application.Current.Shutdown();
+        }
+        catch (Exception exception)
+        {
+            AboutStatusText.Text = $"Update check failed: {exception.Message}";
+        }
     }
 
     private async void SaveFreshRssButton_Click(object sender, RoutedEventArgs e)

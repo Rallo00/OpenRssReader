@@ -1,5 +1,5 @@
 {
-  "App.Title": "Ava RSS lugeja v1.4",
+  "App.Title": "Ava RSS lugeja v1.5",
   "Main.Settings": "Seadistused",
   "Main.RefreshFeeds": "Värskenda kanalit",
   "Main.SubscribeToFeed": "Telli voog",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pausi lugemine",
   "Main.ReadArticleAloud": "Loe artiklit valjusti",
   "Settings.Title": "Seadistused",
+  "Settings.About": "Teave",
+  "Settings.LatestVersion": "Kasutate uusimat versiooni.",
   "Settings.General": "Kindral",
   "Settings.GeneralIntro": "Ava RSS Lugeja salvestab vooge ja artikli olekut selles seadmes kohapeal.",
   "Settings.KeepArticles": "Sünkroniseeritud söödaartiklite säilitamine",

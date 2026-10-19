@@ -1,5 +1,5 @@
 {
-  "App.Title": "Otevřít RSS Reader v1.4",
+  "App.Title": "Otevřít RSS Reader v1.5",
   "Main.Settings": "Nastavení",
   "Main.RefreshFeeds": "Obnovené krmivo",
   "Main.SubscribeToFeed": "Přihlásit se ke krmení",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pozastavit čtení",
   "Main.ReadArticleAloud": "Přečtěte si článek nahlas",
   "Settings.Title": "Nastavení",
+  "Settings.About": "Informace",
+  "Settings.LatestVersion": "Používáte nejnovější verzi.",
   "Settings.General": "Obecné",
   "Settings.GeneralIntro": "Otevřít RSS Čtečka ukládá kanály a článek na tomto zařízení.",
   "Settings.KeepArticles": "Udržet synchronizované krmné předměty pro",

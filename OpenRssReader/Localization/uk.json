@@ -1,5 +1,5 @@
 {
-  "App.Title": "Open RSS Reader v1.4",
+  "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Налаштування",
   "Main.RefreshFeeds": "Корми Refresh",
   "Main.SubscribeToFeed": "Підписатися на розсилку",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Читання паузи",
   "Main.ReadArticleAloud": "Читати статтю aloud",
   "Settings.Title": "Налаштування",
+  "Settings.About": "Про програму",
+  "Settings.LatestVersion": "Ви використовуєте найновішу версію.",
   "Settings.General": "Головна",
   "Settings.GeneralIntro": "Про нас Читальник зберігає корми та стан статті локально на цьому пристрої.",
   "Settings.KeepArticles": "Зберігайте синхронізацію кормових виробів для",

@@ -1,5 +1,5 @@
 {
-  "App.Title": "Deschide Reader RSS v1.4",
+  "App.Title": "Deschide Reader RSS v1.5",
   "Main.Settings": "Configurări",
   "Main.RefreshFeeds": "Hrană proaspătă",
   "Main.SubscribeToFeed": "Aboneaza-te la alimentare",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pauză de citire",
   "Main.ReadArticleAloud": "Citiţi articolul cu voce tare",
   "Settings.Title": "Configurări",
+  "Settings.About": "Despre",
+  "Settings.LatestVersion": "Utilizați cea mai recentă versiune.",
   "Settings.General": "Generale",
   "Settings.GeneralIntro": "Deschide RSS Reader magazine feed-uri și articol stat local pe acest dispozitiv.",
   "Settings.KeepArticles": "Păstrați articolele sincronizate pentru furaje",

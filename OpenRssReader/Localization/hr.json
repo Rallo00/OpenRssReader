@@ -1,5 +1,5 @@
 {
-  "App.Title": "Otvori RSS Reader v1.4",
+  "App.Title": "Otvori RSS Reader v1.5",
   "Main.Settings": "Postavke",
   "Main.RefreshFeeds": "Osvježi feedove",
   "Main.SubscribeToFeed": "Pretplati se na feed",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pauziraj čitanje",
   "Main.ReadArticleAloud": "Pročitaj članak naglas",
   "Settings.Title": "Postavke",
+  "Settings.About": "O aplikaciji",
+  "Settings.LatestVersion": "Koristite najnoviju verziju.",
   "Settings.General": "Općenito",
   "Settings.GeneralIntro": "Otvori RSS Reader pohranjuje feedove i stanje članka lokalno na ovom uređaju.",
   "Settings.KeepArticles": "Čuvaj sinkronizirane članke feedova ",

@@ -1,5 +1,5 @@
 {
-  "App.Title": "Atvērt RSS lasītāju v1.4",
+  "App.Title": "Atvērt RSS lasītāju v1.5",
   "Main.Settings": "Iestatījumi",
   "Main.RefreshFeeds": "Atsvaidzināt barotnes",
   "Main.SubscribeToFeed": "Pierakstīties uz barotni",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Pauzēt lasīšanu",
   "Main.ReadArticleAloud": "Lasīt rakstu skaļi",
   "Settings.Title": "Iestatījumi",
+  "Settings.About": "Par lietotni",
+  "Settings.LatestVersion": "Jūs izmantojat jaunāko versiju.",
   "Settings.General": "Pamata",
   "Settings.GeneralIntro": "Atvērt RSS Lasītājs saglabā plūsmas un rakstu stāvokli lokāli šajā ierīcē.",
   "Settings.KeepArticles": "Saglabāt sinhronizētus ziņu avotu rakstus priekš",

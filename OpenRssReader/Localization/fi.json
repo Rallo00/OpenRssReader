@@ -1,5 +1,5 @@
 {
-  "App.Title": "Avaa RSS-lukija v1.4",
+  "App.Title": "Avaa RSS-lukija v1.5",
   "Main.Settings": "Asetukset",
   "Main.RefreshFeeds": "Päivitä rehut",
   "Main.SubscribeToFeed": "Tilaa rehu",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Keskeytä lukeminen",
   "Main.ReadArticleAloud": "Lue artikkeli ääneen",
   "Settings.Title": "Asetukset",
+  "Settings.About": "Tietoja",
+  "Settings.LatestVersion": "Käytät uusinta versiota.",
   "Settings.General": "Yleistä",
   "Settings.GeneralIntro": "Avaa RSS Lukija tallentaa syötteet ja artikkelin tila paikallisesti tällä laitteella.",
   "Settings.KeepArticles": "Pidä synkronoidut rehuesineet",

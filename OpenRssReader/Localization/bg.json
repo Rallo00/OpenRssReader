@@ -1,5 +1,5 @@
 {
-  "App.Title": "Отваряне на RSS Reader v1.4",
+  "App.Title": "Отваряне на RSS Reader v1.5",
   "Main.Settings": "Настройки",
   "Main.RefreshFeeds": "Пресни фуражи",
   "Main.SubscribeToFeed": "Абониране за хранене",
@@ -33,6 +33,8 @@
   "Main.PauseReading": "Проверка на паузата",
   "Main.ReadArticleAloud": "Прочети статията на глас",
   "Settings.Title": "Настройки",
+  "Settings.About": "Относно",
+  "Settings.LatestVersion": "Използвате най-новата версия.",
   "Settings.General": "Общи положения",
   "Settings.GeneralIntro": "Отваряне на RSS Reader съхранява храни и статии състояние локално на това устройство.",
   "Settings.KeepArticles": "Поддържане на синхронизирани артикули за фураж",
