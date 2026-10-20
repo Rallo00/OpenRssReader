@@ -43,7 +43,21 @@ public partial class MainWindow : Window
         _podcastPlayer.MediaFailed += PodcastPlayer_MediaFailed;
         Loaded += async (_, _) =>
         {
-            await _viewModel.InitializeAsync();
+            try
+            {
+                await _viewModel.InitializeAsync();
+            }
+            catch (Exception exception)
+            {
+                var localization = LocalizationManager.Instance;
+                MessageBox.Show(
+                    this,
+                    localization.Get("Main.StartupErrorMessage", exception.Message),
+                    localization["Main.StartupErrorTitle"],
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+
             await RestorePendingUpdateBackupAsync();
             ApplyAppearance();
             ArticleBrowser.NavigateToString(_viewModel.SelectedArticleHtml);

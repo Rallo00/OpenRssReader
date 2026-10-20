@@ -1,6 +1,8 @@
 {
   "App.Title": "Åbn RSS Reader v1.5",
   "Main.Settings": "Indstillinger",
+  "Main.StartupErrorTitle": "Startfejl",
+  "Main.StartupErrorMessage": "Der opstod en fejl under opstart af programmet. Du kan stadig åbne Indstillinger og rette konfigurationen.\n\nDetaljer: {0}",
   "Main.RefreshFeeds": "Genopfrisk foder",
   "Main.SubscribeToFeed": "Abonner på foder",
   "Main.CreateFolder": "Opret mappe",

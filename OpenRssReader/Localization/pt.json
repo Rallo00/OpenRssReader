@@ -1,6 +1,8 @@
 {
   "App.Title": "Abrir o Leitor RSS v1.5",
   "Main.Settings": "Configurações",
+  "Main.StartupErrorTitle": "Erro ao iniciar",
+  "Main.StartupErrorMessage": "Ocorreu um erro ao iniciar a aplicação. Ainda pode abrir as Configurações e corrigir a configuração.\n\nDetalhes: {0}",
   "Main.RefreshFeeds": "Actualizar as fontes de notícias",
   "Main.SubscribeToFeed": "Subscrever a fonte",
   "Main.CreateFolder": "Criar pasta",

@@ -1,6 +1,8 @@
 {
   "App.Title": "Atvērt RSS lasītāju v1.5",
   "Main.Settings": "Iestatījumi",
+  "Main.StartupErrorTitle": "Startēšanas kļūda",
+  "Main.StartupErrorMessage": "Programmas startēšanas laikā radās kļūda. Joprojām varat atvērt iestatījumus un labot konfigurāciju.\n\nDetalizēta informācija: {0}",
   "Main.RefreshFeeds": "Atsvaidzināt barotnes",
   "Main.SubscribeToFeed": "Pierakstīties uz barotni",
   "Main.CreateFolder": "Izveidot mapi",
