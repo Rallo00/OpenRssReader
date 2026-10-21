@@ -56,13 +56,14 @@ public sealed class TextToSpeechService : IDisposable
         }
     }
 
-    public void Speak(string title, string html, int volume, string voiceId)
+    public void Speak(string title, string html, int volume, string voiceId, double speed = 1.0)
     {
         Stop();
         EnsureVoice();
 
         SelectVoice(voiceId);
         _voice!.Volume = Math.Clamp(volume, 0, 100);
+        SetSpeed(speed);
         _voice.Speak(BuildText(title, html), SpeakAsync | PurgeBeforeSpeak);
         IsSpeaking = true;
         IsPaused = false;
@@ -95,6 +96,17 @@ public sealed class TextToSpeechService : IDisposable
         if (_voice is not null)
         {
             _voice.Volume = Math.Clamp(volume, 0, 100);
+        }
+    }
+
+    public void SetSpeed(double speed)
+    {
+        if (_voice is not null)
+        {
+            var normalized = double.IsFinite(speed) ? Math.Clamp(speed, 0.5, 2.0) : 1.0;
+            // SAPI exposes a voice-dependent integer rate rather than a multiplier.
+            // Map the requested multiplier logarithmically, with normal speed at 0.
+            _voice.Rate = Math.Clamp((int)Math.Round(10 * Math.Log(normalized, 3)), -10, 10);
         }
     }
 
@@ -187,7 +199,7 @@ public sealed class TextToSpeechService : IDisposable
         }
     }
 
-    private static string BuildText(string title, string html)
+    public static string BuildText(string title, string html)
     {
         var text = Regex.Replace(html, "<script[\\s\\S]*?</script>|<style[\\s\\S]*?</style>", " ", RegexOptions.IgnoreCase);
         text = Regex.Replace(text, "<[^>]+>", " ");

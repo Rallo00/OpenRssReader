@@ -37,7 +37,10 @@ public partial class SettingsWindow : Window
 
     private readonly MainViewModel _viewModel;
     private readonly GitHubUpdateService _updateService = new();
-    private bool _isInitializing;
+    private bool _isInitializing = true;
+    private bool _isUpdatingSpeechControls;
+    private bool _isInstallingKokoro;
+    private readonly DispatcherTimer _readingSpeedTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
 
     public SettingsWindow(MainViewModel viewModel)
     {
@@ -67,6 +70,9 @@ public partial class SettingsWindow : Window
         {
             TextToSpeechVoiceComboBox.SelectedIndex = 0;
         }
+        PopulateKokoroVoices(_viewModel.TranslationTargetLanguage);
+        SelectSpeechEngine(_viewModel.UseKokoroTextToSpeech);
+        ReadingSpeedSlider.Value = _viewModel.ReadingSpeed;
         SelectComboBoxItem(UnreadSortComboBox, _viewModel.UnreadSortOrder);
         SelectComboBoxItem(GroupByComboBox, _viewModel.GroupBy);
         SelectComboBoxItem(ThemeComboBox, _viewModel.Appearance);
@@ -77,6 +83,16 @@ public partial class SettingsWindow : Window
         ShowUnreadListCheckBox.IsChecked = _viewModel.ShowUnreadList;
         DisplayPodcastListCheckbox.IsChecked = _viewModel.ShowPodcastList;
         _isInitializing = false;
+        _readingSpeedTimer.Tick += async (_, _) =>
+        {
+            _readingSpeedTimer.Stop();
+            await SaveReadingSpeedAsync();
+        };
+        Closed += async (_, _) =>
+        {
+            _readingSpeedTimer.Stop();
+            await SaveReadingSpeedAsync();
+        };
     }
 
     private async void ReadingTypographyChanged(object sender, RoutedEventArgs e)
@@ -100,9 +116,32 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private async void TextToSpeechVoiceChanged(object sender, SelectionChangedEventArgs e)
+    private void ReadingSpeedChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_isInitializing)
+        {
+            return;
+        }
+
+        _readingSpeedTimer.Stop();
+        _readingSpeedTimer.Start();
+    }
+
+    private async Task SaveReadingSpeedAsync()
+    {
+        try
+        {
+            await _viewModel.SetReadingSpeedAsync(ReadingSpeedSlider.Value);
+        }
+        catch (Exception exception)
+        {
+            ReadingStatusText.Text = exception.Message;
+        }
+    }
+
+    private async void TextToSpeechVoiceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing || _isInstallingKokoro || _isUpdatingSpeechControls || SapiEngineRadioButton.IsChecked != true)
         {
             return;
         }
@@ -118,6 +157,143 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private async void SpeechEngineChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing || _isUpdatingSpeechControls || _isInstallingKokoro)
+        {
+            return;
+        }
+
+        try
+        {
+            if (KokoroEngineRadioButton.IsChecked == true)
+            {
+                var language = TranslateLanguageComboBox.SelectedItem as string ?? _viewModel.TranslationTargetLanguage;
+                await ConfirmAndInstallKokoroAsync(language);
+            }
+            else
+            {
+                await _viewModel.SetKokoroTextToSpeechAsync(false);
+                ReadingStatusText.Text = LocalizationManager.Instance["Settings.KokoroDisabledStatus"];
+            }
+        }
+        catch (Exception exception)
+        {
+            KokoroStatusText.Text = exception.Message;
+        }
+        finally
+        {
+            SelectSpeechEngine(_viewModel.UseKokoroTextToSpeech);
+        }
+    }
+
+    private async void KokoroVoiceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing || _isUpdatingSpeechControls || _isInstallingKokoro ||
+            !_viewModel.UseKokoroTextToSpeech || KokoroVoiceComboBox.SelectedValue is not string voiceId)
+        {
+            return;
+        }
+
+        try
+        {
+            await _viewModel.SetKokoroTextToSpeechAsync(true, voiceId);
+        }
+        catch (Exception exception)
+        {
+            KokoroStatusText.Text = exception.Message;
+        }
+    }
+
+    private async Task<bool> ConfirmAndInstallKokoroAsync(string language)
+    {
+        var localization = LocalizationManager.Instance;
+        if (_viewModel.GetKokoroVoices(language).Count == 0)
+        {
+            MessageBox.Show(this, localization.Get("Settings.KokoroUnsupportedLanguage", language),
+                localization["Settings.ConfigureReadingVoice"], MessageBoxButton.OK, MessageBoxImage.Information);
+            return false;
+        }
+
+        var result = MessageBox.Show(this, localization.Get("Settings.KokoroDownloadConfirm", language),
+            localization["Settings.ConfigureReadingVoice"], MessageBoxButton.YesNo,
+            MessageBoxImage.Question, MessageBoxResult.No);
+        if (result != MessageBoxResult.Yes)
+        {
+            return false;
+        }
+
+        _isInstallingKokoro = true;
+        SapiEngineRadioButton.IsEnabled = false;
+        KokoroEngineRadioButton.IsEnabled = false;
+        TranslateLanguageComboBox.IsEnabled = false;
+        KokoroVoiceComboBox.IsEnabled = false;
+        TextToSpeechVoiceComboBox.IsEnabled = false;
+        KokoroDownloadProgress.Value = 0;
+        KokoroDownloadProgress.Visibility = Visibility.Visible;
+        var progress = new Progress<double>(value =>
+        {
+            if (_isInstallingKokoro)
+            {
+                KokoroDownloadProgress.Value = value * 100;
+                KokoroStatusText.Text = localization.Get("Settings.KokoroDownloading", $"{value:P0}");
+            }
+        });
+
+        try
+        {
+            KokoroStatusText.Text = localization["Settings.KokoroPreparing"];
+            await _viewModel.InstallKokoroAsync(language, progress);
+            PopulateKokoroVoices(language);
+            await _viewModel.SetKokoroTextToSpeechAsync(true, KokoroVoiceComboBox.SelectedValue as string);
+            SelectSpeechEngine(true);
+            KokoroStatusText.Text = localization["Settings.KokoroInstalled"];
+            ReadingStatusText.Text = localization["Settings.KokoroEnabledStatus"];
+            await Dispatcher.InvokeAsync(() => KokoroVoiceComboBox.BringIntoView(), DispatcherPriority.Loaded);
+            return true;
+        }
+        finally
+        {
+            _isInstallingKokoro = false;
+            SapiEngineRadioButton.IsEnabled = true;
+            KokoroEngineRadioButton.IsEnabled = true;
+            TranslateLanguageComboBox.IsEnabled = true;
+            KokoroVoiceComboBox.IsEnabled = true;
+            TextToSpeechVoiceComboBox.IsEnabled = true;
+            KokoroDownloadProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void PopulateKokoroVoices(string language)
+    {
+        _isUpdatingSpeechControls = true;
+        try
+        {
+            var voices = _viewModel.GetKokoroVoices(language);
+            KokoroVoiceComboBox.ItemsSource = voices;
+            KokoroVoiceComboBox.SelectedItem = voices.FirstOrDefault(voice => voice.Id == _viewModel.KokoroVoiceId)
+                ?? voices.FirstOrDefault();
+        }
+        finally
+        {
+            _isUpdatingSpeechControls = false;
+        }
+    }
+
+    private void SelectSpeechEngine(bool useKokoro)
+    {
+        _isUpdatingSpeechControls = true;
+        try
+        {
+            SapiEngineRadioButton.IsChecked = !useKokoro;
+            KokoroEngineRadioButton.IsChecked = useKokoro;
+        }
+        finally
+        {
+            _isUpdatingSpeechControls = false;
+        }
+    }
+
     private void TextToSpeechVoiceComboBox_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (sender is ComboBox comboBox)
@@ -130,18 +306,31 @@ public partial class SettingsWindow : Window
 
     private async void TranslationLanguageChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing || TranslateLanguageComboBox.SelectedItem is not string language)
+        if (_isInitializing || _isInstallingKokoro || TranslateLanguageComboBox.SelectedItem is not string language)
         {
             return;
         }
 
         try
         {
+            if (_viewModel.UseKokoroTextToSpeech && !await ConfirmAndInstallKokoroAsync(language))
+            {
+                return;
+            }
+
             await _viewModel.SetTranslationTargetLanguageAsync(language);
+            PopulateKokoroVoices(language);
         }
         catch (Exception exception)
         {
             ReadingStatusText.Text = exception.Message;
+        }
+        finally
+        {
+            _isInitializing = true;
+            TranslateLanguageComboBox.SelectedItem = _viewModel.TranslationTargetLanguage;
+            _isInitializing = false;
+            SelectSpeechEngine(_viewModel.UseKokoroTextToSpeech);
         }
     }
 
@@ -176,6 +365,8 @@ public partial class SettingsWindow : Window
 
         try
         {
+            _readingSpeedTimer.Stop();
+            await _viewModel.SetReadingSpeedAsync(ReadingSpeedSlider.Value);
             await _viewModel.SetArticleRetentionDaysAsync(retentionDays);
             await _viewModel.SetGeneralPreferencesAsync(
                 SelectedText(UnreadSortComboBox),

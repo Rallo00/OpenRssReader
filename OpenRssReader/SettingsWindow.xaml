@@ -116,10 +116,12 @@
                         <TextBlock Text="{loc:Loc Settings.Reading}" />
                     </StackPanel>
                 </TabItem.Header>
-                <Grid Margin="10">
-                    <TextBlock Text="{loc:Loc Settings.ReadingIntro}" FontWeight="Bold" FontSize="14" />
-                    <StackPanel Orientation="Vertical" Margin="0,40,0,0">
-                        <StackPanel Orientation="Horizontal">
+                <ScrollViewer Margin="10"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock Text="{loc:Loc Settings.ReadingIntro}" FontWeight="Bold" FontSize="14" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
                             <StackPanel>
                                 <TextBlock Text="{loc:Loc Settings.ArticleFont}" />
                                 <ComboBox x:Name="ReadingFontFamilyComboBox" Height="28" Width="150" HorizontalAlignment="Left" Margin="0,5,0,0" SelectionChanged="ReadingTypographyChanged" />
@@ -147,9 +149,34 @@
                                 <TextBlock Text="{loc:Loc Settings.BetaFeature}" Margin="0,5,0,0" FontStyle="Italic" Foreground="#888" />
                             </StackPanel>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                            <StackPanel>
-                                <TextBlock Text="{loc:Loc Settings.SapiVoice}" />
+                        <StackPanel Margin="0,20,0,0">
+                            <TextBlock Text="{loc:Loc Settings.ConfigureReadingVoice}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <WrapPanel Margin="0,10,0,0">
+                                <RadioButton x:Name="SapiEngineRadioButton"
+                                             GroupName="ReadingSpeechEngine"
+                                             IsChecked="True"
+                                             Content="{loc:Loc Settings.SapiEngine}"
+                                             Margin="0,0,24,8"
+                                             Checked="SpeechEngineChanged" />
+                                <RadioButton x:Name="KokoroEngineRadioButton"
+                                             GroupName="ReadingSpeechEngine"
+                                             Content="{loc:Loc Settings.KokoroEngine}"
+                                             Margin="0,0,0,8"
+                                             Checked="SpeechEngineChanged" />
+                            </WrapPanel>
+                            <StackPanel x:Name="SapiVoicePanel">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, ElementName=SapiEngineRadioButton}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
                                 <ComboBox x:Name="TextToSpeechVoiceComboBox"
                                           Height="28"
                                           Width="280"
@@ -162,10 +189,63 @@
                                           PreviewMouseLeftButtonUp="TextToSpeechVoiceComboBox_PreviewMouseLeftButtonUp"
                                           SelectionChanged="TextToSpeechVoiceChanged" />
                             </StackPanel>
+                            <StackPanel x:Name="KokoroVoicePanel">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, ElementName=KokoroEngineRadioButton}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="{loc:Loc Settings.KokoroVoice}"
+                                           Margin="0,5,0,0" />
+                                <ComboBox x:Name="KokoroVoiceComboBox"
+                                          Height="28"
+                                          Width="280"
+                                          HorizontalAlignment="Left"
+                                          Margin="0,5,0,0"
+                                          Style="{x:Null}"
+                                          DisplayMemberPath="DisplayName"
+                                          SelectedValuePath="Id"
+                                          MaxDropDownHeight="240"
+                                          SelectionChanged="KokoroVoiceChanged" />
+                            </StackPanel>
+                            <TextBlock Text="{loc:Loc Settings.ReadingSpeed}"
+                                       Margin="0,14,0,0" />
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <Slider x:Name="ReadingSpeedSlider"
+                                        Minimum="0.5"
+                                        Maximum="2"
+                                        Value="1"
+                                        TickFrequency="0.05"
+                                        SmallChange="0.05"
+                                        LargeChange="0.25"
+                                        IsSnapToTickEnabled="True"
+                                        Width="240"
+                                        VerticalAlignment="Center"
+                                        ValueChanged="ReadingSpeedChanged" />
+                                <TextBlock Text="{Binding Value, ElementName=ReadingSpeedSlider, StringFormat={}{0:0.00}x}"
+                                           Margin="12,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ProgressBar x:Name="KokoroDownloadProgress"
+                                         Minimum="0"
+                                         Maximum="100"
+                                         Height="5"
+                                         Margin="0,10,0,0"
+                                         Visibility="Collapsed" />
+                            <TextBlock x:Name="KokoroStatusText"
+                                       Margin="0,8,0,0"
+                                       TextWrapping="Wrap" />
                         </StackPanel>
+                        <TextBlock x:Name="ReadingStatusText"
+                                   Margin="0,10,0,0"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
-                    <TextBlock x:Name="ReadingStatusText" Margin="0,170,0,0" />
-                </Grid>
+                </ScrollViewer>
             </TabItem>
             <!-- TAB INTEGRATIONS -->
             <TabItem>

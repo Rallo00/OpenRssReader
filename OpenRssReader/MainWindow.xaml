@@ -303,7 +303,7 @@
                     <Button Style="{StaticResource SidebarFilterButtonStyle}" Command="{Binding SelectPodcastsCommand}" Cursor="Hand" Visibility="{Binding IsPodcastListVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <TextBlock Text="{loc:Loc Main.Podcasts}" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="5,0,0,0" />
-                            <TextBlock Text="{Binding TotalPodcastCount}" Margin="10,0,0,0" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding UnreadPodcastCount}" Margin="10,0,0,0" FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Visibility="{Binding HasUnreadPodcasts, Converter={StaticResource BooleanToVisibilityConverter}}" />
                         </StackPanel>
                     </Button>
                     <ItemsControl ItemsSource="{Binding FeedGroups}" Margin="0,12,0,0" />
@@ -334,7 +334,19 @@
                     <TextBlock Text="{Binding ActiveSectionTitle}" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                     <TextBlock Text="{Binding ActiveSectionSubtitle}" Margin="0,2,0,0" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}" />
                 </StackPanel>
-                <ListBox ItemsSource="{Binding VisibleArticles}" SelectedItem="{Binding SelectedArticle}" Background="Transparent" BorderThickness="0" Padding="10,0,14,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="False" ScrollViewer.PanningMode="Both" IsManipulationEnabled="True">
+                <ListBox ItemsSource="{Binding VisibleArticles}"
+                         SelectedItem="{Binding SelectedArticle}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Padding="10,0,14,0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.PanningMode="VerticalOnly"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         VirtualizingPanel.ScrollUnit="Pixel"
+                         IsManipulationEnabled="True">
                     <ListBox.GroupStyle>
                         <GroupStyle><GroupStyle.HeaderTemplate><DataTemplate><TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" Margin="18,16,18,8" /></DataTemplate></GroupStyle.HeaderTemplate></GroupStyle>
                     </ListBox.GroupStyle>

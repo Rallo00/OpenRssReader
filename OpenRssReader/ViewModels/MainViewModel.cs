@@ -18,6 +18,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly FeedService _feedService = new();
     private readonly StorageService _storageService = new();
     private readonly TextToSpeechService _textToSpeechService = new();
+    private readonly KokoroTextToSpeechService _kokoroTextToSpeechService = new();
     private readonly TranslationService _translationService = new();
     private readonly SemaphoreSlim _refreshSemaphore = new(1, 1);
     private readonly List<ArticleItem> _allArticles = [];
@@ -41,6 +42,9 @@ public sealed class MainViewModel : ObservableObject
     private int _readingFontSize = 18;
     private int _readingTitleFontSize = 40;
     private string _textToSpeechVoiceId = string.Empty;
+    private double _readingSpeed = 1.0;
+    private bool _useKokoroTextToSpeech;
+    private string _kokoroVoiceId = "af_heart";
     private string _translationTargetLanguage = "English";
     private string? _translatedTitle;
     private string? _translatedHtml;
@@ -129,7 +133,7 @@ public sealed class MainViewModel : ObservableObject
 
     public ObservableCollection<FeedGroup> FeedGroups { get; }
     public IReadOnlyList<string> FolderNames => _folders.OrderBy(name => name).ToList();
-    public ObservableCollection<ArticleItem> VisibleArticles { get; }
+    public BulkObservableCollection<ArticleItem> VisibleArticles { get; }
     public RelayCommand RefreshAllCommand { get; }
     public RelayCommand SelectAllCommand { get; }
     public RelayCommand SelectUnreadCommand { get; }
@@ -183,6 +187,7 @@ public sealed class MainViewModel : ObservableObject
             ToggleSelectedSavedCommand.RaiseCanExecuteChanged();
             ToggleSelectedReadCommand.RaiseCanExecuteChanged();
             _textToSpeechService.Stop();
+            _kokoroTextToSpeechService.Stop();
             SetTextToSpeechState();
             ToggleTextToSpeechCommand.RaiseCanExecuteChanged();
             TranslateSelectedArticleCommand.RaiseCanExecuteChanged();
@@ -221,13 +226,15 @@ public sealed class MainViewModel : ObservableObject
 
     public int TotalUnreadCount => _allArticles.Count(article => article.IsUnread);
     public bool HasUnreadItems => TotalUnreadCount > 0;
-    public int TotalSavedCount => _allArticles.Count(article => article.IsSaved);
+    public int TotalSavedCount => _allArticles.Count(article => article.IsSaved || article.IsFavorite);
     public bool HasSavedItems => TotalSavedCount > 0;
     public Brush UnreadSectionBackground => _showUnreadOnly ? BrushFactory.CreateBrush("#E7DED3") : BrushFactory.CreateBrush("#EFE8DE");
     public Brush AllArticlesSectionBackground => !_showUnreadOnly && !_showFavoritesOnly ? BrushFactory.CreateBrush("#E7DED3") : BrushFactory.CreateBrush("#EFE8DE");
     public bool IsFavoritesFilterActive => _showFavoritesOnly;
     public bool IsSavedFilterActive => _showSavedOnly;
     public int TotalPodcastCount => _allArticles.Count(article => article.IsPodcast);
+    public int UnreadPodcastCount => _allArticles.Count(article => article.IsPodcast && article.IsUnread);
+    public bool HasUnreadPodcasts => UnreadPodcastCount > 0;
     public bool HasPodcastEpisodes => TotalPodcastCount > 0;
     public bool IsPodcastListVisible => _showPodcastList && HasPodcastEpisodes;
     public int ArticleRetentionDays => _articleRetentionDays;
@@ -236,6 +243,10 @@ public sealed class MainViewModel : ObservableObject
     public int ReadingFontSize => _readingFontSize;
     public int ReadingTitleFontSize => _readingTitleFontSize;
     public string TextToSpeechVoiceId => _textToSpeechVoiceId;
+    public double ReadingSpeed => _readingSpeed;
+    public bool UseKokoroTextToSpeech => _useKokoroTextToSpeech;
+    public string KokoroVoiceId => _kokoroVoiceId;
+    public bool IsKokoroInstalled => _kokoroTextToSpeechService.IsInstalled;
     public string TranslationTargetLanguage => _translationTargetLanguage;
     public string TranslationToolTip => _isTranslating
         ? LocalizationManager.Instance["Main.TranslatingArticle"]
@@ -271,7 +282,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(bool refreshFeeds = true)
     {
         var state = await _storageService.LoadAsync();
         if (state is null)
@@ -281,22 +292,12 @@ public sealed class MainViewModel : ObservableObject
 
         LoadState(state);
         CleanupExpiredArticles();
+        RecalculateUnreadCounts();
         RefreshVisibleArticles();
-        if (!string.IsNullOrWhiteSpace(_freshRssServerUrl) &&
-            !string.IsNullOrWhiteSpace(_freshRssUsername) &&
-            !string.IsNullOrWhiteSpace(_freshRssPassword))
+        if (refreshFeeds)
         {
-            try
-            {
-                await SyncFreshRssAsync();
-            }
-            catch
-            {
-                // Preserve the locally cached library when FreshRSS is temporarily unavailable.
-            }
+            await RefreshFeedsAsync();
         }
-        await PersistAsync();
-        await RefreshFeedsAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -304,6 +305,7 @@ public sealed class MainViewModel : ObservableObject
         CancelReadDelay();
         LocalizationManager.Instance.PropertyChanged -= LocalizationManagerOnPropertyChanged;
         _textToSpeechService.Dispose();
+        _kokoroTextToSpeechService.Dispose();
         await PersistAsync();
     }
 
@@ -333,6 +335,11 @@ public sealed class MainViewModel : ObservableObject
         _readingFontSize = Math.Clamp(state.ReadingFontSize <= 0 ? 18 : state.ReadingFontSize, 12, 32);
         _readingTitleFontSize = Math.Clamp(state.ReadingTitleFontSize <= 0 ? 40 : state.ReadingTitleFontSize, 24, 64);
         _textToSpeechVoiceId = state.TextToSpeechVoiceId ?? string.Empty;
+        _readingSpeed = double.IsFinite(state.ReadingSpeed) && state.ReadingSpeed > 0
+            ? Math.Clamp(state.ReadingSpeed, 0.5, 2.0)
+            : 1.0;
+        _useKokoroTextToSpeech = state.UseKokoroTextToSpeech;
+        _kokoroVoiceId = string.IsNullOrWhiteSpace(state.KokoroVoiceId) ? "af_heart" : state.KokoroVoiceId;
         _translationTargetLanguage = string.IsNullOrWhiteSpace(state.TranslationTargetLanguage) ? "English" : state.TranslationTargetLanguage;
         _applicationLanguage = string.IsNullOrWhiteSpace(state.ApplicationLanguage) ? "en" : state.ApplicationLanguage;
         LocalizationManager.Instance.SetLanguage(_applicationLanguage);
@@ -340,6 +347,10 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ReadingTitleFontFamily));
         OnPropertyChanged(nameof(ReadingFontSize));
         OnPropertyChanged(nameof(ReadingTitleFontSize));
+        OnPropertyChanged(nameof(UseKokoroTextToSpeech));
+        OnPropertyChanged(nameof(KokoroVoiceId));
+        OnPropertyChanged(nameof(ReadingSpeed));
+        OnPropertyChanged(nameof(IsKokoroInstalled));
         OnPropertyChanged(nameof(ApplicationLanguage));
         _unreadSortOrder = state.UnreadSortOrder == "Oldest first" ? "Oldest first" : "Newest first";
         _groupBy = state.GroupBy == "Source" ? "Source" : "Date";
@@ -412,7 +423,6 @@ public sealed class MainViewModel : ObservableObject
         RebuildFeedGroups();
         RecalculateUnreadCounts();
         OnPropertyChanged(nameof(LastRefreshLabel));
-        _ = PersistAsync();
     }
 
     public async Task RefreshFeedsAsync()
@@ -443,39 +453,59 @@ public sealed class MainViewModel : ObservableObject
 
     private async Task RefreshAllAsync()
     {
-        var existingById = _allArticles.ToDictionary(article => article.Id, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var feed in _allFeeds)
+        var feeds = _allFeeds.ToArray();
+        using var downloadGate = new SemaphoreSlim(4, 4);
+        var downloads = feeds.Select(async feed =>
         {
+            await downloadGate.WaitAsync();
             try
             {
-                var items = await _feedService.FetchFeedAsync(feed);
-                foreach (var item in items)
-                {
-                    if (!existingById.TryGetValue(item.Id, out var existing))
-                    {
-                        _allArticles.Add(item);
-                        existingById[item.Id] = item;
-                    }
-                    else
-                    {
-                        if (item.HasPublicationDate)
-                        {
-                            existing.PublishedAt = item.PublishedAt;
-                            existing.HasPublicationDate = true;
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(item.AudioUrl))
-                        {
-                            existing.AudioUrl = item.AudioUrl;
-                        }
-
-                        existing.RequiresArticleContentFetch |= item.RequiresArticleContentFetch;
-                    }
-                }
+                return await _feedService.FetchFeedAsync(feed);
             }
-            catch
+            catch (Exception exception)
             {
+                Debug.WriteLine($"Feed refresh failed for {feed.Name}: {exception.Message}");
+                return (IReadOnlyList<ArticleItem>)Array.Empty<ArticleItem>();
+            }
+            finally
+            {
+                downloadGate.Release();
+            }
+        }).ToArray();
+        var results = await Task.WhenAll(downloads);
+
+        // Downloads run concurrently, but all bound collections are merged on
+        // the UI thread, in subscription order, to retain stable read/save state.
+        var existingById = _allArticles.ToDictionary(article => article.Id, StringComparer.OrdinalIgnoreCase);
+        for (var index = 0; index < feeds.Length; index++)
+        {
+            if (!_allFeeds.Contains(feeds[index]))
+            {
+                continue;
+            }
+
+            foreach (var item in results[index])
+            {
+                if (!existingById.TryGetValue(item.Id, out var existing))
+                {
+                    _allArticles.Add(item);
+                    existingById[item.Id] = item;
+                }
+                else
+                {
+                    if (item.HasPublicationDate)
+                    {
+                        existing.PublishedAt = item.PublishedAt;
+                        existing.HasPublicationDate = true;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(item.AudioUrl))
+                    {
+                        existing.AudioUrl = item.AudioUrl;
+                    }
+
+                    existing.RequiresArticleContentFetch |= item.RequiresArticleContentFetch;
+                }
             }
         }
 
@@ -713,12 +743,60 @@ public sealed class MainViewModel : ObservableObject
 
     public IReadOnlyList<SpeechVoiceOption> GetInstalledTextToSpeechVoices() => _textToSpeechService.GetInstalledVoices();
 
+    public async Task SetReadingSpeedAsync(double speed)
+    {
+        var normalized = double.IsFinite(speed) ? Math.Clamp(speed, 0.5, 2.0) : 1.0;
+        if (Math.Abs(_readingSpeed - normalized) < 0.0001)
+        {
+            return;
+        }
+
+        _readingSpeed = normalized;
+        _textToSpeechService.SetSpeed(normalized);
+        OnPropertyChanged(nameof(ReadingSpeed));
+        await PersistAsync();
+    }
+
+    public IReadOnlyList<KokoroVoiceOption> GetKokoroVoices(string language) => _kokoroTextToSpeechService.GetSupportedVoices(language);
+
+    public async Task InstallKokoroAsync(string language, IProgress<double>? progress = null)
+    {
+        await _kokoroTextToSpeechService.InstallAsync(language, progress);
+        OnPropertyChanged(nameof(IsKokoroInstalled));
+    }
+
+    public async Task SetKokoroTextToSpeechAsync(bool enabled, string? voiceId = null)
+    {
+        var selectedVoiceId = string.IsNullOrWhiteSpace(voiceId) ? _kokoroVoiceId : voiceId.Trim();
+        if (enabled && !_kokoroTextToSpeechService.IsVoiceInstalled(selectedVoiceId))
+        {
+            throw new InvalidOperationException(LocalizationManager.Instance["Settings.KokoroNeedsInstall"]);
+        }
+
+        _textToSpeechService.Stop();
+        _kokoroTextToSpeechService.Stop();
+        _useKokoroTextToSpeech = enabled;
+        if (!string.IsNullOrWhiteSpace(voiceId))
+        {
+            _kokoroVoiceId = voiceId.Trim();
+        }
+
+        SetTextToSpeechState();
+        OnPropertyChanged(nameof(UseKokoroTextToSpeech));
+        OnPropertyChanged(nameof(KokoroVoiceId));
+        OnPropertyChanged(nameof(IsKokoroInstalled));
+        await PersistAsync();
+    }
+
     public async Task SetTextToSpeechVoiceAsync(string? voiceId)
     {
         _textToSpeechService.Stop();
+        _kokoroTextToSpeechService.Stop();
+        _useKokoroTextToSpeech = false;
         _textToSpeechVoiceId = voiceId?.Trim() ?? string.Empty;
         SetTextToSpeechState();
         OnPropertyChanged(nameof(TextToSpeechVoiceId));
+        OnPropertyChanged(nameof(UseKokoroTextToSpeech));
         await PersistAsync();
     }
 
@@ -1075,7 +1153,7 @@ public sealed class MainViewModel : ObservableObject
         }
         if (_showSavedOnly)
         {
-            query = query.Where(article => article.IsSaved);
+            query = query.Where(article => article.IsSaved || article.IsFavorite);
         }
         if (_showPodcastsOnly)
         {
@@ -1096,11 +1174,8 @@ public sealed class MainViewModel : ObservableObject
         var articles = (_showUnreadOnly && _unreadSortOrder == "Oldest first"
             ? query.OrderBy(article => article.PublishedAt)
             : query.OrderByDescending(article => article.PublishedAt)).Take(120).ToList();
-        VisibleArticles.Clear();
-        foreach (var article in articles)
-        {
-            VisibleArticles.Add(article);
-        }
+        var previousSelection = SelectedArticle;
+        VisibleArticles.ReplaceWith(articles);
 
         ActiveSectionTitle = _selectedFeedId is not null
             ? _allFeeds.FirstOrDefault(feed => feed.Id == _selectedFeedId)?.Name ?? LocalizationManager.Instance["Main.Feed"]
@@ -1115,6 +1190,8 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsFavoritesFilterActive));
         OnPropertyChanged(nameof(IsSavedFilterActive));
         OnPropertyChanged(nameof(TotalPodcastCount));
+        OnPropertyChanged(nameof(UnreadPodcastCount));
+        OnPropertyChanged(nameof(HasUnreadPodcasts));
         OnPropertyChanged(nameof(HasPodcastEpisodes));
         OnPropertyChanged(nameof(IsPodcastListVisible));
         OnPropertyChanged(nameof(TotalUnreadCount));
@@ -1122,7 +1199,11 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(TotalSavedCount));
         OnPropertyChanged(nameof(HasSavedItems));
 
-        if (SelectedArticle is null || !VisibleArticles.Contains(SelectedArticle))
+        if (previousSelection is not null && VisibleArticles.Contains(previousSelection))
+        {
+            SelectedArticle = previousSelection;
+        }
+        else if (SelectedArticle is null || !VisibleArticles.Contains(SelectedArticle))
         {
             SelectedArticle = VisibleArticles.FirstOrDefault();
         }
@@ -1140,6 +1221,8 @@ public sealed class MainViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(TotalUnreadCount));
+        OnPropertyChanged(nameof(UnreadPodcastCount));
+        OnPropertyChanged(nameof(HasUnreadPodcasts));
         OnPropertyChanged(nameof(HasUnreadItems));
         OnPropertyChanged(nameof(UnreadSectionBackground));
     }
@@ -1194,9 +1277,10 @@ public sealed class MainViewModel : ObservableObject
 
         // Never leave a subscribed source empty solely because it currently exposes
         // historical entries. As soon as that source publishes a current entry, its
-        // older unsaved articles return to the normal retention policy.
+        // older articles return to normal retention unless saved or pinned.
         _allArticles.RemoveAll(article =>
             !article.IsSaved &&
+            !article.IsFavorite &&
             article.PublishedAt < cutoff &&
             feedsWithCurrentArticles.Contains(article.FeedId));
     }
@@ -1312,7 +1396,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private void ToggleTextToSpeech()
+    private async void ToggleTextToSpeech()
     {
         if (SelectedArticle is null)
         {
@@ -1321,6 +1405,22 @@ public sealed class MainViewModel : ObservableObject
 
         try
         {
+            if (_useKokoroTextToSpeech)
+            {
+                if (_kokoroTextToSpeechService.IsSpeaking)
+                {
+                    _kokoroTextToSpeechService.Stop();
+                }
+                else
+                {
+                    var text = TextToSpeechService.BuildText(_translatedTitle ?? SelectedArticle.Title, _translatedHtml ?? SelectedArticle.HtmlContent);
+                    await _kokoroTextToSpeechService.SpeakAsync(text, _kokoroVoiceId, _readingSpeed);
+                }
+
+                SetTextToSpeechState();
+                return;
+            }
+
             if (_textToSpeechService.IsPaused)
             {
                 _textToSpeechService.Resume();
@@ -1331,7 +1431,7 @@ public sealed class MainViewModel : ObservableObject
             }
             else
             {
-                _textToSpeechService.Speak(_translatedTitle ?? SelectedArticle.Title, _translatedHtml ?? SelectedArticle.HtmlContent, TextToSpeechVolume, _textToSpeechVoiceId);
+                _textToSpeechService.Speak(_translatedTitle ?? SelectedArticle.Title, _translatedHtml ?? SelectedArticle.HtmlContent, TextToSpeechVolume, _textToSpeechVoiceId, _readingSpeed);
             }
 
             SetTextToSpeechState();
@@ -1346,8 +1446,10 @@ public sealed class MainViewModel : ObservableObject
 
     private void SetTextToSpeechState()
     {
-        _isTextToSpeechActive = _textToSpeechService.IsSpeaking;
-        _isTextToSpeechPaused = _textToSpeechService.IsPaused;
+        _isTextToSpeechActive = _useKokoroTextToSpeech
+            ? _kokoroTextToSpeechService.IsSpeaking
+            : _textToSpeechService.IsSpeaking;
+        _isTextToSpeechPaused = !_useKokoroTextToSpeech && _textToSpeechService.IsPaused;
         OnPropertyChanged(nameof(IsTextToSpeechActive));
         OnPropertyChanged(nameof(TextToSpeechButtonPath));
         OnPropertyChanged(nameof(TextToSpeechToolTip));
@@ -1374,6 +1476,9 @@ public sealed class MainViewModel : ObservableObject
             ReadingFontSize = _readingFontSize,
             ReadingTitleFontSize = _readingTitleFontSize,
             TextToSpeechVoiceId = _textToSpeechVoiceId,
+            ReadingSpeed = _readingSpeed,
+            UseKokoroTextToSpeech = _useKokoroTextToSpeech,
+            KokoroVoiceId = _kokoroVoiceId,
             TranslationTargetLanguage = _translationTargetLanguage,
             UnreadSortOrder = _unreadSortOrder,
             GroupBy = _groupBy,

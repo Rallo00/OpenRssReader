@@ -28,6 +28,8 @@ public partial class MainWindow : Window
     private bool _startPodcastWhenReady;
     private Uri? _podcastAudioUri;
     private int _podcastRequestVersion;
+    private bool _isClosing;
+    private string? _lastRenderedArticleHtml;
 
     public MainWindow()
     {
@@ -43,17 +45,42 @@ public partial class MainWindow : Window
         _podcastPlayer.MediaFailed += PodcastPlayer_MediaFailed;
         Loaded += async (_, _) =>
         {
-            await _viewModel.InitializeAsync();
-            await RestorePendingUpdateBackupAsync();
+            // Give WPF its first paint before reading and rebuilding the library.
+            await Dispatcher.Yield(DispatcherPriority.Background);
+            await _viewModel.InitializeAsync(refreshFeeds: false);
+            if (_isClosing)
+            {
+                return;
+            }
             ApplyAppearance();
-            ArticleBrowser.NavigateToString(_viewModel.SelectedArticleHtml);
-            _ = ConfigurePodcastPlayerAsync();
+            RefreshArticleBrowser();
             ResizeArticleBrowser();
+            var restoredUpdateBackup = await RestorePendingUpdateBackupAsync();
+            if (_isClosing)
+            {
+                return;
+            }
             ConfigureAutomaticRefreshTimer();
+            if (!restoredUpdateBackup)
+            {
+                try
+                {
+                    await _viewModel.RefreshFeedsAsync();
+                }
+                catch (Exception exception)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Startup feed synchronization failed: {exception.Message}");
+                }
+            }
+            if (_isClosing)
+            {
+                return;
+            }
             await CheckForApplicationUpdateAsync();
         };
         Closed += async (_, _) =>
         {
+            _isClosing = true;
             _automaticRefreshTimer.Stop();
             _podcastProgressTimer.Stop();
             _automaticRefreshTimer.Tick -= AutomaticRefreshTimer_Tick;
@@ -69,25 +96,26 @@ public partial class MainWindow : Window
         };
     }
 
-    private async Task RestorePendingUpdateBackupAsync()
+    private async Task<bool> RestorePendingUpdateBackupAsync()
     {
         var arguments = Environment.GetCommandLineArgs();
         var backupArgumentIndex = Array.FindIndex(arguments, argument => string.Equals(argument, "--restore-backup", StringComparison.OrdinalIgnoreCase));
         if (backupArgumentIndex < 0 || backupArgumentIndex + 1 >= arguments.Length)
         {
-            return;
+            return false;
         }
 
         var backupPath = arguments[backupArgumentIndex + 1];
         if (!File.Exists(backupPath))
         {
-            return;
+            return false;
         }
 
         try
         {
             await _viewModel.RestoreBackupAsync(backupPath);
             File.Delete(backupPath);
+            return true;
         }
         catch (Exception exception)
         {
@@ -96,6 +124,7 @@ public partial class MainWindow : Window
                 "Open RSS Reader update",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
+            return false;
         }
     }
 
@@ -137,7 +166,7 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(MainViewModel.SelectedArticleHtml))
         {
-            ArticleBrowser.NavigateToString(_viewModel.SelectedArticleHtml);
+            RefreshArticleBrowser();
         }
         else if (e.PropertyName == nameof(MainViewModel.Appearance))
         {
@@ -151,6 +180,23 @@ public partial class MainWindow : Window
         {
             _ = ConfigurePodcastPlayerAsync();
         }
+    }
+
+    private void RefreshArticleBrowser()
+    {
+        if (_isClosing)
+        {
+            return;
+        }
+
+        var html = _viewModel.SelectedArticleHtml;
+        if (string.Equals(html, _lastRenderedArticleHtml, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        ArticleBrowser.NavigateToString(html);
+        _lastRenderedArticleHtml = html;
     }
 
     private void ConfigureAutomaticRefreshTimer()

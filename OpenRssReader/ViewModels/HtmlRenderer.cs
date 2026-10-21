@@ -111,7 +111,13 @@ public static class HtmlRenderer
     {
         // The WPF WebBrowser uses the legacy IE engine. Embedded scripts and frames can
         // show modal runtime errors, so render article text and media only.
-        var sanitized = Regex.Replace(html, @"<script\b[^>]*>.*?</script\s*>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        var sanitized = html.Contains("<script", StringComparison.OrdinalIgnoreCase)
+            ? Regex.Replace(html, @"<script\b[^>]*>.*?</script\s*>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            : html;
+        if (!sanitized.Contains("<iframe", StringComparison.OrdinalIgnoreCase))
+        {
+            return sanitized;
+        }
         sanitized = Regex.Replace(sanitized, @"<iframe\b[^>]*>.*?</iframe\s*>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
         return Regex.Replace(sanitized, @"<iframe\b[^>]*/?>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
     }

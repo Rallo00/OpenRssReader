@@ -14,6 +14,9 @@ public sealed class AppState
     public int ReadingFontSize { get; set; } = 18;
     public int ReadingTitleFontSize { get; set; } = 40;
     public string TextToSpeechVoiceId { get; set; } = string.Empty;
+    public double ReadingSpeed { get; set; } = 1.0;
+    public bool UseKokoroTextToSpeech { get; set; } = false;
+    public string KokoroVoiceId { get; set; } = "af_heart";
     public string TranslationTargetLanguage { get; set; } = "English";
     public string UnreadSortOrder { get; set; } = "Newest first";
     public string GroupBy { get; set; } = "Date";

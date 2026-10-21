@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,7 +15,8 @@ public sealed class FeedService
 {
     private const string ReaderUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
     private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
-    private readonly HashSet<string> _articleDateLookups = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, byte> _articleDateLookups = new(StringComparer.OrdinalIgnoreCase);
+    private readonly SemaphoreSlim _articleDateLookupGate = new(6, 6);
 
     public async Task<bool> TryLoadArticleContentAsync(ArticleItem article)
     {
@@ -66,10 +68,10 @@ public sealed class FeedService
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, subscription.Url);
         ConfigureRequestHeaders(request);
-        using var response = await _httpClient.SendAsync(request);
+        using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var xml = NormalizeDocumentContent(await response.Content.ReadAsStringAsync());
+        var xml = NormalizeDocumentContent(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
         if (xml.TrimStart().StartsWith('{'))
         {
             return ParseJsonFeed(subscription, xml);
@@ -84,7 +86,7 @@ public sealed class FeedService
             _ => ParseRss(subscription, document)
         };
 
-        await ResolveMissingPublicationDatesAsync(articles);
+        await ResolveMissingPublicationDatesAsync(articles).ConfigureAwait(false);
         return articles;
     }
 
@@ -804,14 +806,22 @@ public sealed class FeedService
 
     private async Task ResolveMissingPublicationDatesAsync(IReadOnlyList<ArticleItem> articles)
     {
-        var pending = articles.Where(article => !article.HasPublicationDate && _articleDateLookups.Add(article.Id)).ToList();
+        var pending = articles.Where(article => !article.HasPublicationDate && _articleDateLookups.TryAdd(article.Id, 0)).ToList();
         await Parallel.ForEachAsync(pending, new ParallelOptions { MaxDegreeOfParallelism = 6 }, async (article, cancellationToken) =>
         {
-            var publishedAt = await TryGetPublicationDateFromArticleAsync(article.Link, cancellationToken);
-            if (publishedAt.HasValue)
+            await _articleDateLookupGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                article.PublishedAt = publishedAt.Value;
-                article.HasPublicationDate = true;
+                var publishedAt = await TryGetPublicationDateFromArticleAsync(article.Link, cancellationToken).ConfigureAwait(false);
+                if (publishedAt.HasValue)
+                {
+                    article.PublishedAt = publishedAt.Value;
+                    article.HasPublicationDate = true;
+                }
+            }
+            finally
+            {
+                _articleDateLookupGate.Release();
             }
         });
     }
