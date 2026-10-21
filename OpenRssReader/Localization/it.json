@@ -1,6 +1,8 @@
 {
   "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Impostazioni",
+  "Main.StartupErrorTitle": "Errore all’avvio",
+  "Main.StartupErrorMessage": "Si è verificato un errore durante l’avvio dell’applicazione. Puoi comunque aprire le Impostazioni e correggere la configurazione.\n\nDettagli: {0}",
   "Main.RefreshFeeds": "Aggiorna feed",
   "Main.SubscribeToFeed": "Aggiungi feed",
   "Main.CreateFolder": "Crea cartella",

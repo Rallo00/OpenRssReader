@@ -1,6 +1,8 @@
 {
   "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Налаштування",
+  "Main.StartupErrorTitle": "Помилка запуску",
+  "Main.StartupErrorMessage": "Під час запуску програми сталася помилка. Ви можете відкрити Налаштування та виправити конфігурацію.\n\nДокладно: {0}",
   "Main.RefreshFeeds": "Корми Refresh",
   "Main.SubscribeToFeed": "Підписатися на розсилку",
   "Main.CreateFolder": "Створити папку",

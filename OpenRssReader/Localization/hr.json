@@ -1,6 +1,8 @@
 {
   "App.Title": "Otvori RSS Reader v1.5",
   "Main.Settings": "Postavke",
+  "Main.StartupErrorTitle": "Pogreška pri pokretanju",
+  "Main.StartupErrorMessage": "Došlo je do pogreške pri pokretanju aplikacije. I dalje možete otvoriti Postavke i ispraviti konfiguraciju.\n\nPojedinosti: {0}",
   "Main.RefreshFeeds": "Osvježi feedove",
   "Main.SubscribeToFeed": "Pretplati se na feed",
   "Main.CreateFolder": "Izradi mapu",

@@ -1,6 +1,8 @@
 {
   "App.Title": "Otevřít RSS Reader v1.5",
   "Main.Settings": "Nastavení",
+  "Main.StartupErrorTitle": "Chyba při spuštění",
+  "Main.StartupErrorMessage": "Při spouštění aplikace došlo k chybě. Stále můžete otevřít Nastavení a opravit konfiguraci.\n\nPodrobnosti: {0}",
   "Main.RefreshFeeds": "Obnovené krmivo",
   "Main.SubscribeToFeed": "Přihlásit se ke krmení",
   "Main.CreateFolder": "Vytvořit složku",

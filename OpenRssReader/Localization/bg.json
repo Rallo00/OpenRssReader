@@ -1,6 +1,8 @@
 {
   "App.Title": "Отваряне на RSS Reader v1.5",
   "Main.Settings": "Настройки",
+  "Main.StartupErrorTitle": "Грешка при стартиране",
+  "Main.StartupErrorMessage": "Възникна грешка при стартиране на приложението. Все още можете да отворите настройките и да коригирате конфигурацията.\n\nПодробности: {0}",
   "Main.RefreshFeeds": "Пресни фуражи",
   "Main.SubscribeToFeed": "Абониране за хранене",
   "Main.CreateFolder": "Създаване на папка",

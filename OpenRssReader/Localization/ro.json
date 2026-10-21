@@ -1,6 +1,8 @@
 {
   "App.Title": "Deschide Reader RSS v1.5",
   "Main.Settings": "Configurări",
+  "Main.StartupErrorTitle": "Eroare la pornire",
+  "Main.StartupErrorMessage": "A apărut o eroare la pornirea aplicației. Puteți deschide în continuare Setările și corecta configurația.\n\nDetalii: {0}",
   "Main.RefreshFeeds": "Hrană proaspătă",
   "Main.SubscribeToFeed": "Aboneaza-te la alimentare",
   "Main.CreateFolder": "Creează dosar",

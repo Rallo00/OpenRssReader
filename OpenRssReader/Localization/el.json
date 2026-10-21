@@ -1,6 +1,8 @@
 {
   "App.Title": "Άνοιγμα ανάγνωσης RSS v1.5",
   "Main.Settings": "Settings",
+  "Main.StartupErrorTitle": "Σφάλμα εκκίνησης",
+  "Main.StartupErrorMessage": "Παρουσιάστηκε σφάλμα κατά την εκκίνηση της εφαρμογής. Μπορείτε ακόμη να ανοίξετε τις Ρυθμίσεις και να διορθώσετε τη διαμόρφωση.\n\nΛεπτομέρειες: {0}",
   "Main.RefreshFeeds": "Ανανέωση τροφών",
   "Main.SubscribeToFeed": "Εγγραφή στην τροφοδοσία",
   "Main.CreateFolder": "Δημιουργία φακέλου",

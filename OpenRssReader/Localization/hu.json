@@ -1,6 +1,8 @@
 {
   "App.Title": "RSS olvasó megnyitása v1.5",
   "Main.Settings": "Beállítások",
+  "Main.StartupErrorTitle": "Indítási hiba",
+  "Main.StartupErrorMessage": "Hiba történt az alkalmazás indításakor. A Beállítások továbbra is megnyithatók a konfiguráció javításához.\n\nRészletek: {0}",
   "Main.RefreshFeeds": "Friss takarmányok",
   "Main.SubscribeToFeed": "Feliratkozás takarmányozásra",
   "Main.CreateFolder": "A mappa létrehozása",

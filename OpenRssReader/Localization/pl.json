@@ -1,6 +1,8 @@
 {
   "App.Title": "Otwórz czytnik RSS v1.5",
   "Main.Settings": "Ustawienia",
+  "Main.StartupErrorTitle": "Błąd uruchamiania",
+  "Main.StartupErrorMessage": "Wystąpił błąd podczas uruchamiania aplikacji. Nadal możesz otworzyć Ustawienia i poprawić konfigurację.\n\nSzczegóły: {0}",
   "Main.RefreshFeeds": "Pasze odświeżające",
   "Main.SubscribeToFeed": "Subskrybować do karmienia",
   "Main.CreateFolder": "Utwórz folder",

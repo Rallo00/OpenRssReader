@@ -1,6 +1,8 @@
 {
   "App.Title": "Avaa RSS-lukija v1.5",
   "Main.Settings": "Asetukset",
+  "Main.StartupErrorTitle": "Käynnistysvirhe",
+  "Main.StartupErrorMessage": "Sovelluksen käynnistyksessä tapahtui virhe. Voit silti avata asetukset ja korjata määritykset.\n\nLisätiedot: {0}",
   "Main.RefreshFeeds": "Päivitä rehut",
   "Main.SubscribeToFeed": "Tilaa rehu",
   "Main.CreateFolder": "Luo kansio",

@@ -1,6 +1,8 @@
 {
   "App.Title": "Open RSS Reader v1.5",
   "Main.Settings": "Nustatymai",
+  "Main.StartupErrorTitle": "Paleidimo klaida",
+  "Main.StartupErrorMessage": "Paleidžiant programą įvyko klaida. Vis tiek galite atidaryti nustatymus ir pataisyti konfigūraciją.\n\nIšsami informacija: {0}",
   "Main.RefreshFeeds": "Atnaujinti kanalus",
   "Main.SubscribeToFeed": "Prenumeruoti pašarus",
   "Main.CreateFolder": "Sukurti aplanką",

@@ -1,6 +1,8 @@
 {
   "App.Title": "Ouvrir le lecteur RSS v1.5",
   "Main.Settings": "Paramètres",
+  "Main.StartupErrorTitle": "Erreur au démarrage",
+  "Main.StartupErrorMessage": "Une erreur s’est produite au démarrage de l’application. Vous pouvez tout de même ouvrir les paramètres et corriger la configuration.\n\nDétails : {0}",
   "Main.RefreshFeeds": "Rafraîchir les flux",
   "Main.SubscribeToFeed": "Abonnez-vous au flux",
   "Main.CreateFolder": "Créer un dossier",
