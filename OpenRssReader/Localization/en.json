@@ -1,5 +1,5 @@
 {
-  "App.Title": "Open RSS Reader v1.5",
+  "App.Title": "Open RSS Reader v1.6",
   "Main.Settings": "Settings",
   "Main.StartupErrorTitle": "Startup error",
   "Main.StartupErrorMessage": "An error occurred while starting the application. You can still open Settings and correct the configuration.\n\nDetails: {0}",

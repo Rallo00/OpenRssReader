@@ -1,5 +1,5 @@
 {
-  "App.Title": "Ava RSS lugeja v1.5",
+  "App.Title": "Ava RSS lugeja v1.6",
   "Main.Settings": "Seadistused",
   "Main.StartupErrorTitle": "Käivitustõrge",
   "Main.StartupErrorMessage": "Rakenduse käivitamisel ilmnes tõrge. Saad siiski avada seaded ja konfiguratsiooni parandada.\n\nÜksikasjad: {0}",

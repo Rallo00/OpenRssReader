@@ -1,5 +1,5 @@
 {
-  "App.Title": "Öppna RSS Reader v1.5",
+  "App.Title": "Öppna RSS Reader v1.6",
   "Main.Settings": "Inställningar",
   "Main.StartupErrorTitle": "Startfel",
   "Main.StartupErrorMessage": "Ett fel uppstod när programmet startade. Du kan fortfarande öppna Inställningar och korrigera konfigurationen.\n\nDetaljer: {0}",

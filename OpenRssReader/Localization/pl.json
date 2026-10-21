@@ -1,5 +1,5 @@
 {
-  "App.Title": "Otwórz czytnik RSS v1.5",
+  "App.Title": "Otwórz czytnik RSS v1.6",
   "Main.Settings": "Ustawienia",
   "Main.StartupErrorTitle": "Błąd uruchamiania",
   "Main.StartupErrorMessage": "Wystąpił błąd podczas uruchamiania aplikacji. Nadal możesz otworzyć Ustawienia i poprawić konfigurację.\n\nSzczegóły: {0}",

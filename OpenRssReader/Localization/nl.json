@@ -1,5 +1,5 @@
 {
-  "App.Title": "RSS-lezer openen v1.5",
+  "App.Title": "RSS-lezer openen v1.6",
   "Main.Settings": "Instellingen",
   "Main.StartupErrorTitle": "Opstartfout",
   "Main.StartupErrorMessage": "Er is een fout opgetreden bij het starten van de toepassing. Je kunt Instellingen nog steeds openen en de configuratie corrigeren.\n\nDetails: {0}",
