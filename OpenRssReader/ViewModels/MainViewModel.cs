@@ -45,7 +45,7 @@ public sealed class MainViewModel : ObservableObject
     private double _readingSpeed = 1.0;
     private bool _useKokoroTextToSpeech;
     private string _kokoroVoiceId = "af_heart";
-    private string _translationTargetLanguage = "English";
+    private string _translationTargetLanguage = "en";
     private string? _translatedTitle;
     private string? _translatedHtml;
     private bool _isTranslating;
@@ -250,7 +250,7 @@ public sealed class MainViewModel : ObservableObject
     public string TranslationTargetLanguage => _translationTargetLanguage;
     public string TranslationToolTip => _isTranslating
         ? LocalizationManager.Instance["Main.TranslatingArticle"]
-        : LocalizationManager.Instance.Get("Main.TranslateTo", _translationTargetLanguage);
+        : LocalizationManager.Instance.Get("Main.TranslateTo", LanguageCatalog.GetNativeName(_translationTargetLanguage));
     public bool DisplaySourceFavicons => _displaySourceFavicons;
     public bool ShowAllArticlesList => _showAllArticlesList;
     public bool ShowSavedList => _showSavedList;
@@ -340,7 +340,7 @@ public sealed class MainViewModel : ObservableObject
             : 1.0;
         _useKokoroTextToSpeech = state.UseKokoroTextToSpeech;
         _kokoroVoiceId = string.IsNullOrWhiteSpace(state.KokoroVoiceId) ? "af_heart" : state.KokoroVoiceId;
-        _translationTargetLanguage = string.IsNullOrWhiteSpace(state.TranslationTargetLanguage) ? "English" : state.TranslationTargetLanguage;
+        _translationTargetLanguage = LanguageCatalog.Find(state.TranslationTargetLanguage)?.Code ?? "en";
         _applicationLanguage = string.IsNullOrWhiteSpace(state.ApplicationLanguage) ? "en" : state.ApplicationLanguage;
         LocalizationManager.Instance.SetLanguage(_applicationLanguage);
         OnPropertyChanged(nameof(ReadingFontFamily));
@@ -807,7 +807,7 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
-        _translationTargetLanguage = language.Trim();
+        _translationTargetLanguage = LanguageCatalog.Find(language)?.Code ?? "en";
         _translatedTitle = null;
         _translatedHtml = null;
         OnPropertyChanged(nameof(TranslationTargetLanguage));

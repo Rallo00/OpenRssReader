@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Json;
+using OpenRssReader.Localization;
 
 namespace OpenRssReader.Services;
 
@@ -45,10 +46,8 @@ public sealed class TranslationService
 
     private static string ResolveLanguageCode(string language)
     {
-        var culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures)
-            .FirstOrDefault(item => string.Equals(item.EnglishName, language, StringComparison.OrdinalIgnoreCase));
-
-        return culture?.TwoLetterISOLanguageName ?? "en";
+        var option = LanguageCatalog.Find(language);
+        return option is null ? "en" : CultureInfo.GetCultureInfo(option.Code).TwoLetterISOLanguageName;
     }
 
     private sealed record TranslationRequest(string Q, string Source, string Target, string Format);

@@ -1,6 +1,7 @@
 using KokoroSharp;
 using KokoroSharp.Core;
 using KokoroSharp.Processing;
+using OpenRssReader.Localization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -225,18 +226,18 @@ public sealed class KokoroTextToSpeechService : IDisposable
 
     private static bool MatchesLanguage(string voiceId, string language)
     {
-        var prefixes = language.Trim().ToLowerInvariant() switch
+        var prefixes = LanguageCatalog.ResolveCode(language)?.ToLowerInvariant() switch
         {
-            "english" => "ab",
-            "american english" or "english (united states)" => "a",
-            "british english" or "english (united kingdom)" => "b",
-            "spanish" => "e",
-            "french" => "f",
-            "hindi" => "h",
-            "italian" => "i",
-            "japanese" => "j",
-            "portuguese" or "brazilian portuguese" => "p",
-            "chinese" or "chinese (simplified)" or "chinese (traditional)" or "mandarin chinese" => "z",
+            "en" => "ab",
+            "en-us" => "a",
+            "en-gb" => "b",
+            "es" => "e",
+            "fr" => "f",
+            "hi" => "h",
+            "it" => "i",
+            "ja" => "j",
+            "pt" or "pt-br" => "p",
+            "zh" or "zh-hans" or "zh-hant" => "z",
             _ => string.Empty
         };
         return voiceId.Length > 3 && voiceId[2] == '_' && prefixes.Contains(voiceId[0]);
@@ -244,15 +245,15 @@ public sealed class KokoroTextToSpeechService : IDisposable
 
     private static string GetLanguage(string voiceId) => voiceId[..Math.Min(2, voiceId.Length)].ToLowerInvariant() switch
     {
-        "af" or "am" => "American English",
-        "bf" or "bm" => "British English",
-        "ef" or "em" => "Spanish",
-        "ff" => "French",
-        "hf" or "hm" => "Hindi",
-        "if" or "im" => "Italian",
-        "jf" or "jm" => "Japanese",
-        "pf" or "pm" => "Brazilian Portuguese",
-        "zf" or "zm" => "Mandarin Chinese",
+        "af" or "am" => "English (US)",
+        "bf" or "bm" => "English (UK)",
+        "ef" or "em" => LanguageCatalog.GetNativeName("es"),
+        "ff" => LanguageCatalog.GetNativeName("fr"),
+        "hf" or "hm" => LanguageCatalog.GetNativeName("hi"),
+        "if" or "im" => LanguageCatalog.GetNativeName("it"),
+        "jf" or "jm" => LanguageCatalog.GetNativeName("ja"),
+        "pf" or "pm" => LanguageCatalog.GetNativeName("pt"),
+        "zf" or "zm" => LanguageCatalog.GetNativeName("zh"),
         _ => "Other"
     };
 

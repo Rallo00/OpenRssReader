@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Globalization;
 using System.IO;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -13,28 +12,6 @@ namespace OpenRssReader;
 
 public partial class SettingsWindow : Window
 {
-    private static readonly IReadOnlyDictionary<string, string> ApplicationLanguageCodes = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["Albanian"] = "sq", ["Basque"] = "eu", ["Belarusian"] = "be", ["Bosnian"] = "bs",
-        ["Bulgarian"] = "bg", ["Catalan"] = "ca", ["Croatian"] = "hr", ["Czech"] = "cs",
-        ["Danish"] = "da", ["Dutch"] = "nl", ["English"] = "en", ["Estonian"] = "et",
-        ["Finnish"] = "fi", ["French"] = "fr", ["Galician"] = "gl", ["German"] = "de",
-        ["Greek"] = "el", ["Hungarian"] = "hu", ["Icelandic"] = "is", ["Irish"] = "ga",
-        ["Italian"] = "it", ["Latvian"] = "lv", ["Lithuanian"] = "lt", ["Luxembourgish"] = "lb",
-        ["Macedonian"] = "mk", ["Maltese"] = "mt", ["Norwegian"] = "no", ["Polish"] = "pl",
-        ["Portuguese"] = "pt", ["Romanian"] = "ro", ["Serbian"] = "sr", ["Slovak"] = "sk",
-        ["Slovenian"] = "sl", ["Spanish"] = "es", ["Swedish"] = "sv", ["Ukrainian"] = "uk",
-        ["Welsh"] = "cy"
-    };
-
-    private static readonly IReadOnlyList<string> WorldLanguages = CultureInfo
-        .GetCultures(CultureTypes.NeutralCultures)
-        .Select(culture => culture.EnglishName)
-        .Where(name => !string.IsNullOrWhiteSpace(name))
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
-        .ToList();
-
     private readonly MainViewModel _viewModel;
     private readonly GitHubUpdateService _updateService = new();
     private bool _isInitializing = true;
@@ -61,8 +38,8 @@ public partial class SettingsWindow : Window
         ReadingTitleFontFamilyComboBox.SelectedItem = _viewModel.ReadingTitleFontFamily;
         ReadingFontSizeTextBox.Text = _viewModel.ReadingFontSize.ToString();
         ReadingTitleFontSizeTextBox.Text = _viewModel.ReadingTitleFontSize.ToString();
-        TranslateLanguageComboBox.ItemsSource = WorldLanguages;
-        TranslateLanguageComboBox.SelectedItem = _viewModel.TranslationTargetLanguage;
+        TranslateLanguageComboBox.ItemsSource = LanguageCatalog.All;
+        TranslateLanguageComboBox.SelectedValue = LanguageCatalog.Find(_viewModel.TranslationTargetLanguage)?.Code ?? "en";
         var installedVoices = _viewModel.GetInstalledTextToSpeechVoices();
         TextToSpeechVoiceComboBox.ItemsSource = installedVoices;
         TextToSpeechVoiceComboBox.SelectedValue = _viewModel.TextToSpeechVoiceId;
@@ -168,7 +145,7 @@ public partial class SettingsWindow : Window
         {
             if (KokoroEngineRadioButton.IsChecked == true)
             {
-                var language = TranslateLanguageComboBox.SelectedItem as string ?? _viewModel.TranslationTargetLanguage;
+                var language = TranslateLanguageComboBox.SelectedValue as string ?? _viewModel.TranslationTargetLanguage;
                 await ConfirmAndInstallKokoroAsync(language);
             }
             else
@@ -208,14 +185,15 @@ public partial class SettingsWindow : Window
     private async Task<bool> ConfirmAndInstallKokoroAsync(string language)
     {
         var localization = LocalizationManager.Instance;
+        var languageName = LanguageCatalog.GetNativeName(language);
         if (_viewModel.GetKokoroVoices(language).Count == 0)
         {
-            MessageBox.Show(this, localization.Get("Settings.KokoroUnsupportedLanguage", language),
+            MessageBox.Show(this, localization.Get("Settings.KokoroUnsupportedLanguage", languageName),
                 localization["Settings.ConfigureReadingVoice"], MessageBoxButton.OK, MessageBoxImage.Information);
             return false;
         }
 
-        var result = MessageBox.Show(this, localization.Get("Settings.KokoroDownloadConfirm", language),
+        var result = MessageBox.Show(this, localization.Get("Settings.KokoroDownloadConfirm", languageName),
             localization["Settings.ConfigureReadingVoice"], MessageBoxButton.YesNo,
             MessageBoxImage.Question, MessageBoxResult.No);
         if (result != MessageBoxResult.Yes)
@@ -306,7 +284,7 @@ public partial class SettingsWindow : Window
 
     private async void TranslationLanguageChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing || _isInstallingKokoro || TranslateLanguageComboBox.SelectedItem is not string language)
+        if (_isInitializing || _isInstallingKokoro || TranslateLanguageComboBox.SelectedValue is not string language)
         {
             return;
         }
@@ -328,7 +306,7 @@ public partial class SettingsWindow : Window
         finally
         {
             _isInitializing = true;
-            TranslateLanguageComboBox.SelectedItem = _viewModel.TranslationTargetLanguage;
+            TranslateLanguageComboBox.SelectedValue = _viewModel.TranslationTargetLanguage;
             _isInitializing = false;
             SelectSpeechEngine(_viewModel.UseKokoroTextToSpeech);
         }
@@ -407,14 +385,21 @@ public partial class SettingsWindow : Window
 
     private void SelectApplicationLanguage(string languageCode)
     {
-        var languageName = ApplicationLanguageCodes.FirstOrDefault(pair => string.Equals(pair.Value, languageCode, StringComparison.OrdinalIgnoreCase)).Key;
-        SelectComboBoxItem(ApplicationLanguageComboBox, string.IsNullOrEmpty(languageName) ? "English" : languageName);
+        foreach (var item in ApplicationLanguageComboBox.Items.OfType<ComboBoxItem>())
+        {
+            var option = LanguageCatalog.Find(item.Tag?.ToString() ?? item.Content?.ToString());
+            if (option is not null)
+            {
+                item.Tag = option.Code;
+                item.Content = option.NativeName;
+            }
+        }
+        SelectComboBoxItem(ApplicationLanguageComboBox, LanguageCatalog.Find(languageCode)?.Code ?? "en");
     }
 
     private string SelectedApplicationLanguageCode()
     {
-        var languageName = SelectedText(ApplicationLanguageComboBox);
-        return ApplicationLanguageCodes.TryGetValue(languageName, out var languageCode) ? languageCode : "en";
+        return LanguageCatalog.Find(SelectedText(ApplicationLanguageComboBox))?.Code ?? "en";
     }
 
     private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)

@@ -141,6 +141,8 @@
                             <StackPanel Margin="50,0,0,0">
                                 <TextBlock Text="{loc:Loc Settings.DefaultTranslationLanguage}" />
                                 <ComboBox x:Name="TranslateLanguageComboBox"
+                                          DisplayMemberPath="NativeName"
+                                          SelectedValuePath="Code"
                                           Height="28"
                                           Width="150"
                                           HorizontalAlignment="Left"

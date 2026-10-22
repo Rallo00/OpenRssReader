@@ -17,7 +17,7 @@ public sealed class AppState
     public double ReadingSpeed { get; set; } = 1.0;
     public bool UseKokoroTextToSpeech { get; set; } = false;
     public string KokoroVoiceId { get; set; } = "af_heart";
-    public string TranslationTargetLanguage { get; set; } = "English";
+    public string TranslationTargetLanguage { get; set; } = "en";
     public string UnreadSortOrder { get; set; } = "Newest first";
     public string GroupBy { get; set; } = "Date";
     public string Appearance { get; set; } = "Light";
